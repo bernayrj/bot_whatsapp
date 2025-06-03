@@ -1,0 +1,31 @@
+{
+  "name": "bot_whatsapp",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1", 
+    "start": "nodemon app.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@bot-whatsapp/bot": "^0.1.38",
+    "@bot-whatsapp/provider-baileys": "^0.1.0-alpha.18",
+    "amqplib": "^0.10.8",
+    "chalk": "^5.4.1",
+    "dotenv": "^16.5.0",
+    "exceljs": "^4.4.0",
+    "express": "^5.1.0",
+    "mime-db": "^1.54.0",
+    "moment": "^2.30.1",
+    "mysql2": "^3.14.1",
+    "node.js": "^0.0.1-security",
+    "nodemon": "^3.1.10",
+    "ora": "^8.2.0",
+    "qrcode": "^1.5.4",
+    "qrcode-terminal": "^0.12.0",
+    "whatsapp-web.js": "^1.23.0"
+  }
+}

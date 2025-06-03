@@ -1,0 +1,8 @@
+.env
+app_test_bd.js
+backup.js
+backup
+node_modules
+ordenes
+.wwebjs_auth
+.wwebjs_cache
