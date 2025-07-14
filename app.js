@@ -135,9 +135,6 @@ const menuDelivery =
 // Agrega este objeto al inicio del archivo para almacenar los pedidos temporales
 const pedidos = {};
 
-// Agrega este objeto para manejar los timeouts
-//const pedidoTimeouts = {};
-
 // Productos y precios
 const productosArepas = {
     'arepa mixta 2 sabores': 3,
@@ -274,6 +271,8 @@ const saludos = ['hola', 'buenas', 'buenas tardes', 'buenos dias', 'hey', 'hi', 
                 break;
             case 'ordenar':
                 if (pedidos[from] && pedidos[from].length > 0) {
+                    const yaTieneDelivery = pedidos[from].some(p => p.item && p.item.startsWith('Delivery'));
+                    if (yaTieneDelivery) {
                     let total = 0;
                     let resumen = '🧾 *Tu pedido:*\n';
                     pedidos[from].forEach(item => {
@@ -303,9 +302,14 @@ const saludos = ['hola', 'buenas', 'buenas tardes', 'buenos dias', 'hey', 'hi', 
                     sendMessage(from, '¿Cómo deseas pagar?\n\n💵 Efectivo\n 📲Pago Movil\n\nResponde con _*EFECTIVO*_ o _*PAGO MOVIL*_');
                     // Limpia el pedido después de mostrarlo
                     delete pedidos[from];
-                } else {
-                    sendMessage(from, 'Aún no has agregado productos. Escribe *MENU* para comenzar tu pedido.');
+                
+                } else
+                  {
+                    sendMessage(from, 'No conocemos tu zona de entrega. Escribe _*DELIVERY*_ para agregarla');
                 }
+                }else {
+                    sendMessage(from, 'Aún no has agregado productos. Escribe *MENU* para comenzar tu pedido.');
+                };
                 break;
 
             case 'pago movil':
@@ -434,5 +438,5 @@ const iniciarTimeoutPedido = (from) => {
     pedidoTimeouts[from] = setTimeout (()=>{
         pedidos[from] = []
         sendMessage(from, '⏰ Su pedido ha sido eliminado por inactividad. Escriba _*DELIVERY*_ para volver a comenzar.')
-    }, 60 * 1000);
-}
+    }, 3 * 60 * 1000);
+};

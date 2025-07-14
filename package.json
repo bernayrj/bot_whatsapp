@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1", 
-    "start": "nodemon app.js"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon sabores_copilot.js"
   },
   "keywords": [],
   "author": "",
@@ -14,6 +14,7 @@
     "@bot-whatsapp/bot": "^0.1.38",
     "@bot-whatsapp/provider-baileys": "^0.1.0-alpha.18",
     "amqplib": "^0.10.8",
+    "axios": "^1.10.0",
     "chalk": "^5.4.1",
     "dotenv": "^16.5.0",
     "exceljs": "^4.4.0",
