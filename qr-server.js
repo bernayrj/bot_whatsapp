@@ -72,3 +72,5 @@ module.exports = {
     setQR: (qr) => { lastQR = qr; lastStatus = 'Esperando escaneo...'; },
     setStatus: (status) => { lastStatus = status; }
 };
+
+app.use (express.static("pagos"));

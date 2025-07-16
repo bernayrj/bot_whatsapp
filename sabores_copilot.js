@@ -5,8 +5,10 @@ const fs = require('fs');
 const path = require('path');
 const mysql = require('mysql2');
 const qrWeb = require('./qr-server');
+const { type } = require('os');
 
 const db = mysql.createPool({
+    
     host: process.env.DB_HOST,
     port: process.env.DB_PORT,
     user: process.env.DB_USER,
@@ -233,6 +235,64 @@ const listenMessage = () => {
         const { from, body } = msg;
         const texto = body.toLowerCase().trim();
 
+        // === BLOQUE PARA RECIBIR Y GUARDAR IMAGEN DE PAGO MOVIL ===
+        if (msg.hasMedia) {
+            if (
+                typeof ultimoPedido !== 'undefined' &&
+                ultimoPedido[from] &&
+                ultimoPedido[from].esperandoPagoMovil
+            ) {
+                msg.downloadMedia().then(media => {
+                    if (media) {
+                        const pagosDir = path.join(__dirname, 'pagos');
+                        if (!fs.existsSync(pagosDir)) {
+                            fs.mkdirSync(pagosDir);
+                        }
+                        const fecha = new Date().toISOString().replace(/[:.]/g, '-');
+                        const filename = `pago_${from}_${fecha}.${media.mimetype.split('/')[1]}`;
+                        const filePath = path.join(pagosDir, filename);
+                        fs.writeFileSync(filePath, media.data, 'base64');
+                        sendMessage(from, '¡Comprobante recibido! Pronto validaremos tu pago.');
+
+                        // === GUARDAR ORDEN EN BD ===
+                        const { resumen, total } = ultimoPedido[from];
+                        const nombreCliente = msg._data?.notifyName || 'Desconocido';
+                        db.query('CALL add_customer(?, ?)', [from, nombreCliente], (errCliente, resCliente) => {
+                            if (errCliente) {
+                                console.log('Error al guardar cliente:', errCliente);
+                                return;
+                            }
+                            db.query('CALL add_order (?, ?, ?, ?, ?, ?)', [fecha, from, resumen, total, 'Pago Movil', filename], (err, results) => {
+                                if (err) {
+                                    console.log('Error en consulta:', err);
+                                    sendMessage(from, 'Ha ocurrido un error, intenta de nuevo');
+                                } else {
+                                    console.log('Resultado de agregar orden:', results[0]);
+                                    sendMessage(from, 'Perfecto, tu pago móvil ha sido registrado. En breve nuestro equipo se comunicará contigo para coordinar la entrega.');
+                                    fetch(process.env.URL_ADMIN, {
+                                    method: 'POST'
+                                }).then ((results) => {
+                                    console.log(results);
+
+                                }).catch((err)=>{
+                                    console.log(err);
+                                })
+                                }
+
+                            });
+                        });
+
+                        delete ultimoPedido[from].esperandoPagoMovil;
+                        delete ultimoPedido[from];
+                    }
+                });
+                return;
+            } else {
+                sendMessage(from, 'No podemos entender tu orden, escribe _*DELIVERY*_ para comenzar');
+                return;
+            }
+        }
+
         // --- Lógica de selección de sabores antes del switch ---
         if (seleccionSabores[from] && seleccionSabores[from].esperando) {
             const sabores = body.split(',').map(s => s.trim().toLowerCase());
@@ -376,19 +436,19 @@ const listenMessage = () => {
                     clearTimeout(pedidoTimeouts[from]);
                     delete pedidoTimeouts[from];
                 }
-                 if (typeof ultimoPedido !== 'undefined' && ultimoPedido[from]) {
-                sendMessage(
-                    from,
-                    '*Datos para Pago Móvil:*\n' +
-                    'Teléfono: 04149071774\n' +
-                    'RIF: J-2000000-0\n' +
-                    'Banco: Banesco\n' +
-                    '*Envianos tu capture del pago movil*'
-                );
+                if (typeof ultimoPedido !== 'undefined' && ultimoPedido[from]) {
+                    sendMessage(
+                        from,
+                        '*Datos para Pago Móvil:*\n' +
+                        'Teléfono: 0424-8179838\n' +
+                        'RIF: J-506873745\n' +
+                        'Banco: Banco de Venezuela (0102)\n' +
+                        '*Envianos tu capture del pago movil*'
+                    );
+                    ultimoPedido[from].esperandoPagoMovil = true; // <-- AGREGA ESTA LÍNEA
                 } else {
                     sendMessage(from, 'No existe ningun pedido, escribe _*DELIVERY*_ para comenzar.');
                 }
-            
                 break;
             case 'efectivo':
                 if (pedidoTimeouts[from]) {
@@ -409,7 +469,7 @@ const listenMessage = () => {
                         console.log(resCliente[0]);
                         console.log(nombreCliente);
                         // Ahora guardar la orden
-                        db.query('CALL add_order (?, ?, ?, ?, ?)', [fecha, from, resumen, total, 'Pago Efectivo'], (err, results) => {
+                        db.query('CALL add_order (?, ?, ?, ?, ?, ?)', [fecha, from, resumen, total, 'Pago Efectivo', 'no aplica'], (err, results) => {
                             if (err) {
                                 console.log('Error en consulta:', err);
                                 sendMessage(from, 'Ha ocurrido un error, intenta de nuevo');
@@ -417,6 +477,14 @@ const listenMessage = () => {
                                 console.log('Resultado de agregar orden:', results[0]);
                                 const myjson = results[0];
                                 console.log(myjson);
+                                fetch(process.env.URL_ADMIN, {
+                                    method: 'POST'
+                                }).then ((results) => {
+                                    console.log(results);
+
+                                }).catch((err)=>{
+                                    console.log(err);
+                                })
                                 sendMessage(from, 'Perfecto, puedes pagar en efectivo al momento de la entrega. En breve nuestro equipo se comunicara contigo para coordinar los detalles de entrega. ' + JSON.stringify(results[0]));
                             }
                         });
