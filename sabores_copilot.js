@@ -67,10 +67,10 @@ client.initialize();
 
 const menuArepas = `
 🫓 *Menú de Arepas*:
-- Arepa mixta 2 sabores $3
-- Arepa mixta 2 sabores con mariscos $3,5
-- Agua 1$
-- Refresco 1$
+- MA1: Arepa mixta 2 sabores $3
+- MA2: Arepa mixta 2 sabores con mariscos $3,5
+- AG1: Agua 1$
+- RF1: Refresco 1$
 `;
 
 const menuBurgers = `
@@ -146,9 +146,9 @@ const menuBurgers = `
 
 const menuDelivery =
 `🛵 *DELIVERY* 🛵
-    - Lecherias $1.5,
-    - Barcelona $3,
-    - Puerto la cruz $4`
+- ZD1: Lecherias $1.5
+- ZD2: Barcelona $3
+- ZD3: Puerto la cruz $4`;
 
 const pedidos = {};
 const seleccionSabores = {};
@@ -227,8 +227,63 @@ const catalogoSabores = [
 const catalogoSaboresMar = [
     'calamar guisado', 'pulpo', 'camaron al ajillo', 'cangrejo', 'pepitona'
 ];
-const menuSabores = catalogoSabores.map(s => `- ${s}`).join('\n');
-const menuSaboresMar = catalogoSaboresMar.map(s => `- ${s}`).join('\n');
+
+//Manejo por codigos para facilitar iteraccion
+
+// Códigos para productos Arepas
+const productosArepasCod = {
+    'MA1': { nombre: 'arepa mixta 2 sabores', precio: 3 },
+    'MA2': { nombre: 'arepa mixta 2 sabores con mariscos', precio: 3.5 },
+    'AG1': { nombre: 'agua', precio: 1 },
+    'RF1': { nombre: 'refresco', precio: 1 }
+};
+
+// Códigos para sabores normales
+const catalogoSaboresCod = {
+    'SA1': 'pollo',
+    'SA2': 'carne mechada',
+    'SA3': 'pernil',
+    'SA4': 'asado negro',
+    'SA5': 'cicharron',
+    'SA6': 'chuleta',
+    'SA7': 'tocineta',
+    'SA8': 'chorizo(guisado)',
+    'SA9': 'salchicha',
+    'SA10': 'queso amarillo',
+    'SA11': 'queso blanco',
+    'SA12': 'telita',
+    'SA13': 'de mano',
+    'SA14': 'guayanes',
+    'SA15': 'riquesa',
+    'SA16': 'reina pepiada',
+    'SA17': 'tapara',
+    'SA18': 'diablito',
+    'SA19': 'cazon'
+};
+
+// Códigos para sabores mariscos
+const catalogoSaboresMarCod = {
+    'SM1': 'calamar guisado',
+    'SM2': 'pulpo',
+    'SM3': 'camaron al ajillo',
+    'SM4': 'cangrejo',
+    'SM5': 'pepitona'
+};
+
+// Códigos para zonas de delivery
+const zonaDeliveryCod = {
+    'ZD1': { nombre: 'lecherias', precio: 1.5 },
+    'ZD2': { nombre: 'barcelona', precio: 3 },
+    'ZD3': { nombre: 'puerto la cruz', precio: 4 }
+};
+
+const menuSabores = Object.entries(catalogoSaboresCod)
+    .map(([cod, nombre]) => `- ${cod}: ${nombre}`)
+    .join('\n');
+const menuSaboresMar = Object.entries(catalogoSaboresMarCod)
+    .map(([cod, nombre]) => `- ${cod}: ${nombre}`)
+    .join('\n');
+
 
 const listenMessage = () => {
     client.on('message', (msg) => {
@@ -295,23 +350,31 @@ const listenMessage = () => {
 
         // --- Lógica de selección de sabores antes del switch ---
         if (seleccionSabores[from] && seleccionSabores[from].esperando) {
-            const sabores = body.split(',').map(s => s.trim().toLowerCase());
+            // Permite ingresar códigos separados por coma
+            const codigos = body.split(',').map(s => s.trim().toUpperCase());
             const tipo = seleccionSabores[from].tipo;
             const cantidad = seleccionSabores[from].cantidad;
             let validos = false;
+            let sabores = [];
 
             if (tipo === 'mariscos') {
-                validos = sabores.length === 2 &&
-                    catalogoSabores.includes(sabores[0]) &&
-                    catalogoSaboresMar.includes(sabores[1]);
+                validos = codigos.length === 2 &&
+                    catalogoSaboresCod[codigos[0]] &&
+                    catalogoSaboresMarCod[codigos[1]];
+                if (validos) {
+                    sabores = [catalogoSaboresCod[codigos[0]], catalogoSaboresMarCod[codigos[1]]];
+                }
                 if (!validos) {
-                    sendMessage(from, `Debes indicar 1 sabor de cada menú, separados por coma.\nEjemplo: Pollo, Camaron al Ajillo\nSabores normales:\n${menuSabores}\nSabores mar:\n${menuSaboresMar}`);
+                    sendMessage(from, `Debes indicar 1 código de cada menú, separados por coma.\nEjemplo: SA1, SM3\nSabores normales:\n${menuSabores}\nSabores mar:\n${menuSaboresMar}`);
                     return;
                 }
             } else {
-                validos = sabores.length === cantidad && sabores.every(s => catalogoSabores.includes(s));
+                validos = codigos.length === cantidad && codigos.every(c => catalogoSaboresCod[c]);
+                if (validos) {
+                    sabores = codigos.map(c => catalogoSaboresCod[c]);
+                }
                 if (!validos) {
-                    sendMessage(from, `Debes indicar exactamente ${cantidad} sabores, separados por coma. Opciones:\n${menuSabores}`);
+                    sendMessage(from, `Debes indicar exactamente ${cantidad} códigos, separados por coma. Opciones:\n${menuSabores}`);
                     return;
                 }
             }
@@ -342,7 +405,7 @@ const listenMessage = () => {
         switch (texto) {
             case 'delivery':
                 pedidos[from] = pedidos[from] || [];
-                sendMessage(from, menuDelivery + '\n\nEscribe el nombre exacto de la zona de entrega de tu pedido. Ej: Lecherias');
+                sendMessage(from, menuDelivery + '\n\nEscribe el código de la zona de entrega de tu pedido. Ej: ZD1');
                 break;
             case 'menu':
                 sendMessage(from, '¿Qué te provoca hoy? \n\n🫓 *Arepas*  \n🍔 *Burger*\n\nEscribe _*AREPAS*_ o _*BURGER*_ para conocer nuestras opciones');
@@ -350,7 +413,7 @@ const listenMessage = () => {
             case 'arepa':
             case 'arepas':
                 pedidos[from] = pedidos[from] || [];
-                sendMedia(from, 'arepazo.png', menuArepas + '\n\n*Responde con la cantidad y el nombre exacto del producto que quieres  (Ej: arepa mixta 2 sabores).*');
+                sendMedia(from, 'arepazo.png', menuArepas + '\n\n*Responde con la cantidad y el código del producto que quieres (Ej: 2 MA1).*');
                 break;
             case 'hamburguesas':
             case 'burger':
@@ -542,6 +605,44 @@ const listenMessage = () => {
                     return;
                 }
 
+                // --- Lógica para productos Arepas por código ---
+                const matchCodigoArepa = productosArepasCod[nombreProducto.toUpperCase()];
+                if (matchCodigoArepa) {
+                    // Si requiere sabores
+                    if (matchCodigoArepa.nombre.includes('2 sabores')) {
+                        seleccionSabores[from] = {
+                            producto: {
+                                item: matchCodigoArepa.nombre,
+                                precio: matchCodigoArepa.precio,
+                                cantidad,
+                                subtotal: cantidad * matchCodigoArepa.precio
+                            },
+                            esperando: true,
+                            tipo: matchCodigoArepa.nombre.includes('mariscos') ? 'mariscos' : 'normal',
+                            cantidad: 2
+                        };
+                        if (matchCodigoArepa.nombre.includes('mariscos')) {
+                            sendMessage(from, `Indica 1 código de cada menú, separados por coma.\nSabores normales:\n${menuSabores}\nSabores mar:\n${menuSaboresMar}`);
+                        } else {
+                            sendMessage(from, `*Sabores:*\n${menuSabores}\n\n_*Responde con los códigos exactos de los sabores separados por coma. (Ej: SA1, SA4)*_`);
+                        }
+                        return;
+                    } else {
+                        // Arepa sin sabores
+                        producto = {
+                            item: matchCodigoArepa.nombre,
+                            precio: matchCodigoArepa.precio,
+                            cantidad,
+                            subtotal: cantidad * matchCodigoArepa.precio
+                        };
+                        pedidos[from] = pedidos[from] || [];
+                        pedidos[from].push(producto);
+                        iniciarTimeoutPedido(from);
+                        sendMessage(from, `Agregado: ${producto.cantidad} x ${producto.item} ($${producto.precio} c/u) = $${producto.subtotal}\n\nEscribe _*VER*_ para ver el total de tu pedido o sigue agregando productos.`);
+                        return;
+                    }
+                }
+
                 // 2. LUEGO: Arepas sin sabores
                 if (productosArepas[nombreProducto]) {
                     producto = {
@@ -584,6 +685,29 @@ const listenMessage = () => {
                             precio: zonaDelivery[nombreProducto],
                             cantidad,
                             subtotal: cantidad * zonaDelivery[nombreProducto]
+                        };
+                        pedidos[from].push(producto);
+                        sendMessage(
+                            from,
+                            `🛵 Gracias 👍🏽 por compartir tu zona de entrega.\n\nEscribe _*MENU*_ para comenzar tomar tu pedido o _*VER*_ para conocer tu pedido.`
+                        );
+                    }
+                    return;
+                }
+
+                // --- Lógica para zona de delivery por código ---
+                const matchCodigoDelivery = zonaDeliveryCod[nombreProducto.toUpperCase()];
+                if (matchCodigoDelivery) {
+                    pedidos[from] = pedidos[from] || [];
+                    const yaTieneDelivery = pedidos[from].some(p => p.item && p.item.startsWith('Delivery'));
+                    if (yaTieneDelivery) {
+                        sendMessage(from, 'Ya has agregado una zona de delivery a tu pedido.\n\nEscribe _*MENU*_ para continuar con tu orden.');
+                    } else {
+                        const producto = {
+                            item: 'Delivery ' + matchCodigoDelivery.nombre,
+                            precio: matchCodigoDelivery.precio,
+                            cantidad,
+                            subtotal: cantidad * matchCodigoDelivery.precio
                         };
                         pedidos[from].push(producto);
                         sendMessage(
