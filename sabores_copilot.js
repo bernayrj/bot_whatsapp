@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const mysql = require('mysql2');
 const qrWeb = require('./qr-server');
+const cron = require('node-cron');
 
 // Conexión a BD MySQL
 const db = mysql.createPool({
@@ -35,6 +36,31 @@ let catalogoSaboresCod = {};
 let catalogoSaboresMarCod = {};
 let menuSabores = '';
 let menuSaboresMar = '';
+
+// Actualizar tasa de cambio
+
+let tasaActual = null;
+
+// Función para consultar la tasa y almacenarla
+function actualizarTasa() {
+    db.query('CALL get_tasa()', (err, results) => {
+        if (err) {
+            console.error('Error al obtener tasa:', err);
+            return;
+        }
+        // Ajusta según cómo retorna tu SP
+        tasaActual = results[0][0]?.tasa || null;
+        console.log('Tasa actualizada:', tasaActual);
+    });
+}
+
+// Ejecutar una vez al iniciar el bot
+actualizarTasa();
+
+// Programar para que se ejecute todos los días a las 12:00 am
+cron.schedule('0 0 * * *', () => {
+    actualizarTasa();
+});
 
 // Traer los sabores disponibles de BD para las arepas
 function cargarSaboresDesdeBD() {
@@ -313,6 +339,8 @@ const listenMessage = () => {
             return;
         }
 
+        cargarSaboresDesdeBD();
+
         switch (texto) {
             case 'delivery':
                 pedidos[from] = pedidos[from] || [];
@@ -323,7 +351,7 @@ const listenMessage = () => {
                 break;
             case 'arepa':
             case 'arepas':
-                cargarSaboresDesdeBD()
+                cargarSaboresDesdeBD();
                 pedidos[from] = pedidos[from] || [];
                 sendMedia(from, 'arepazo.png', menuArepas + '\n\n*Responde con la cantidad y el código del producto que quieres (Ej: 2 MA1).*');
                 break;
@@ -350,6 +378,7 @@ const listenMessage = () => {
                         total += item.subtotal;
                     });
                     resumen += `\n*Total: $${total}*`;
+                    resumen += `\n*Total: Bs. ${(total*tasaActual).toFixed(2)}*`;
                     sendMessage(from, resumen);
                     setTimeout(()=> {
                         sendMessage(from, 'Escribe _*ORDENAR*_ para confimar tu pedido o _*BORRAR*_ para eliminarlo ');
@@ -384,6 +413,7 @@ const listenMessage = () => {
                             total += item.subtotal;
                         });
                         resumen += `\n*Total: $${total}*`;
+                        resumen += `\n*Total: Bs. ${(total*tasaActual).toFixed(2)}*`;
 
                         const nombreCliente = msg._data?.notifyName || 'Desconocido';
 
