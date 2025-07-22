@@ -62,7 +62,7 @@ app.get('/qr-status', (req, res) => {
 });
 
 // Inicia el servidor web
-const PORT = 3000;
+const PORT = 4000;
 app.listen(PORT, () => {
     console.log(`Servidor QR escuchando en http://localhost:${PORT}/qr`);
 });
