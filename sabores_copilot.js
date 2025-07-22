@@ -5,10 +5,9 @@ const fs = require('fs');
 const path = require('path');
 const mysql = require('mysql2');
 const qrWeb = require('./qr-server');
-const { type } = require('os');
 
+// Conexión a BD MySQL
 const db = mysql.createPool({
-    
     host: process.env.DB_HOST,
     port: process.env.DB_PORT,
     user: process.env.DB_USER,
@@ -30,6 +29,40 @@ db.getConnection((err, connection) => {
 });
 
 console.log('BIENVENIDO A CHATBOT DE WHATSAPP');
+
+// Catálogos de sabores por código
+let catalogoSaboresCod = {};
+let catalogoSaboresMarCod = {};
+let menuSabores = '';
+let menuSaboresMar = '';
+
+// Traer los sabores disponibles de BD para las arepas
+function cargarSaboresDesdeBD() {
+    db.query('CALL get_sabores()', (err, results) => {
+        if (err) {
+            console.error('Error al obtener sabores:', err);
+            return;
+        }
+        catalogoSaboresCod = {};
+        catalogoSaboresMarCod = {};
+
+        results[0].forEach(row => {
+            if (row.categoria === 'normal') {
+                catalogoSaboresCod[row.codigo] = row.sabor;
+            } else if (row.categoria === 'mar') {
+                catalogoSaboresMarCod[row.codigo] = row.sabor;
+            }
+        });
+
+        menuSabores = Object.entries(catalogoSaboresCod)
+            .map(([cod, sabor]) => `- ${cod}: ${sabor}`)
+            .join('\n');
+        menuSaboresMar = Object.entries(catalogoSaboresMarCod)
+            .map(([cod, sabor]) => `- ${cod}: ${sabor}`)
+            .join('\n');
+        console.log('Sabores actualizados desde BD');
+    });
+}
 
 const client = new Client({
     authStrategy: new LocalAuth()
@@ -65,83 +98,13 @@ client.on('disconnected', (reason) => {
 
 client.initialize();
 
+// Menú por códigos
 const menuArepas = `
 🫓 *Menú de Arepas*:
 - MA1: Arepa mixta 2 sabores $3
 - MA2: Arepa mixta 2 sabores con mariscos $3,5
 - AG1: Agua 1$
 - RF1: Refresco 1$
-`;
-
-const menuBurgers = `
-🍔 
-*HAMBURGUESAS SOLA*:
-- Smash burger $3
-- Doble Smash Burger $4,5
-- Triple smash Burger $5,5
-- Clasica $4,5
-- Doble Clasica $5,5
-- Triple Clasica $7
-- Smash Rico $4
-- Doble Smash Rico $5,5
-- Triple Smash Rico $6
-- Keto Burger $3,5
-
-🍔🍟 
-*HAMBURGUESAS CON PAPAS*:
-- Smash burger C/P $4
-- Doble Smash Burger C/P $5,5
-- Triple smash Burger C/P $6,5
-- Clasica C/P $5,5
-- Doble Clasica C/P $6,5
-- Triple Clasica C/P $8
-- Smash Rico C/P $5
-- Doble Smash Rico C/P $6,5
-- Triple Smash Rico C/P $7
-- Keto Burger C/P $4,5
-
-🍔🍟🥤 
-*HAMBURGUESAS EN COMBO*:
-- Smash burger COMB $5,5
-- Doble Smash Burger COMB $7
-- Triple smash Burger COMB $8
-- Clasica COMB $7
-- Doble Clasica COMB $8
-- Triple Clasica COMB $9,5
-- Smash Rico COMB $6,5
-- Doble Smash Rico COMB $8
-- Triple Smash Rico COMB $8,5
-- Keto Burger COMB $6
-
-🍗 
-*NUGGETS SOLO*
-- Nuggets de 4 $1,5
-- Nuggets de 6 $2
-- Nuggets de 10 $4,5
-
-🍗🍟
-*NUGGETS CON PAPAS*
-- Nuggets de 4 C/P $2,5
-- Nuggets de 6 C/P $3
-- Nuggets de 10 C/P $5,5
-
-*NUGGETS EN COMBO*
-- Nuggets de 4 COMB $4
-- Nuggets de 6 COMB $4,5
-- Nuggets de 10 COMB $7
-
-🍟 *PAPAS*
-- Papas clasicas $1
-- Canoa familiar $2
-- Canoa papas queso y tocineta $3,5
-
-🥤*BEBIDAS*
-- Refresco de lata $1,5
-- Lipton 500ml $2
-- Agua 355ml $1
-- Refesco 1LT $2
-- Refresco 1 1/2 LT $2,5
-- Refresco 2 LT $3
 `;
 
 const menuDelivery =
@@ -154,81 +117,69 @@ const pedidos = {};
 const seleccionSabores = {};
 const pedidoTimeouts = {};
 
-const productosArepas = {
-    'arepa mixta 2 sabores': 3,
-    'arepa mixta 2 sabores con mariscos': 3.5,
-    'agua': 1,
-    'refresco': 1
+// Catálogos SOLO por código
+const hamburguesasCod = {
+    'HB1': { nombre: 'Smash burger', precios: { S: 3, P: 4, C: 5 } },
+    'HB2': { nombre: 'Doble Smash Burger', precios: { S: 4.5, P: 5.5, C: 7 } },
+    'HB3': { nombre: 'Triple Smash Burger', precios: { S: 5.5, P: 6.5, C: 8 } },
+    'HB4': { nombre: 'Clásica', precios: { S: 4.5, P: 5.5, C: 7 } },
+    'HB5': { nombre: 'Doble Clásica', precios: { S: 5.5, P: 6.5, C: 8 } },
+    'HB6': { nombre: 'Triple Clásica', precios: { S: 7, P: 8, C: 9.5 } },
+    'HB7': { nombre: 'Smash Rico', precios: { S: 4, P: 5, C: 6.5 } },
+    'HB8': { nombre: 'Doble Smash Rico', precios: { S: 5.5, P: 6.5, C: 8 } },
+    'HB9': { nombre: 'Triple Smash Rico', precios: { S: 6, P: 7, C: 8.5 } },
+    'HB10': { nombre: 'Keto Burger', precios: { S: 3.5, P: 4.5, C: 6 } },    
 };
 
-const productosBurgers = {
-'smash burger' :3,
-'doble smash burger' :4.5,
-'triple smash burger' :5.5,
-'clasica' :4.5,
-'doble clasica':5.5,
-'triple clasica' :7,
-'smash rico' :4,
-'doble smash rico' :5.5,
-'triple smash rico' :6,
-'keto burger' :3.5,
-'smash burger c/p' :4,
-'doble smash burger c/p' :5.5,
-'triple smash burger c/p' :6.5,
-'clasica c/p' :5.5,
-'doble clasica c/p' :6.5,
-'triple clasica c/p' :8,
-'smash rico c/p' :5,
-'doble smash rico c/p' :6.5,
-'triple smash rico c/p' :7,
-'keto burger c/p' :4.5,
-'smash burger comb' :5.5,
-'doble smash burger comb' :7,
-'triple smash burger comb' :8,
-'clasica comb' :7,
-'doble clasica comb' :8,
-'triple clasica comb' :9.5,
-'smash rico comb' :6.5,
-'doble smash rico comb' :8,
-'triple smash rico comb' :8.5,
-'keto burger comb' :6,
-'Nuggets de 4' :1.5,
-'Nuggets de 6' :2,
-'Nuggets de 10' :4.5,
-'Nuggets de 4 c/p' :2.5,
-'Nuggets de 6 c/p' :3,
-'Nuggets de 10 c/p' :5.5,
-'Nuggets de 4 comb' :4,
-'Nuggets de 6 comb' :4.5,
-'Nuggets de 10 comb' :7,
-'papas clasicas' :1,
-'canoa familiar' :2,
-'canoa papas queso y tocineta' :3.5,
-'refresco de lata' :1.5,
-'lipton 500ml' :2,
-'agua 355ml' :1,
-'refesco 1lt' :2,
-'refresco 1 1/2 lt' :2.5,
-'refresco 2 lt' :3,
+const nuggetsCod = {
+    'NG1': { nombre: 'Nuggets de 4 piezas', precios: { S: 1.5, P: 2.4, C: 4 } },
+    'NG2': { nombre: 'Nuggets de 6 piezas', precios: { S: 1.5, P: 2.4, C: 4 } },
+    'NG3': { nombre: 'Nuggets de 10 piezas', precios: { S: 1.5, P: 2.4, C: 4 } }
 };
 
-const zonaDelivery ={
-    'lecherias': 1.5,
-    'lecherías' :1.5,
-    'barcelona': 3,
-    'puerto la cruz': 4,
+const papasCod = {
+    'PA1': { nombre: 'Papas clásicas', precio: 1 },
+    'PA2': { nombre: 'Canoa familiar', precio: 2 },
+    'PA3': { nombre: 'Canoa papas queso y tocineta', precio: 3.5 }
+};
+
+const bebidasCod = {
+    'BE1': { nombre: 'Refresco de lata', precio: 1.5 },
+    'BE2': { nombre: 'Lipton 500ml', precio: 2 },
+    'BE3': { nombre: 'Agua 355ml', precio: 1 },
+    'BE4': { nombre: 'Refresco 1LT', precio: 2 },
+    'BE5': { nombre: 'Refresco 1 1/2 LT', precio: 2.5 },
+    'BE6': { nombre: 'Refresco 2 LT', precio: 3 }
+};
+
+const variantesBurger = {
+    'S': 'Sola',
+    'P': 'Con papas',
+    'C': 'En combo'
+};
+
+function getMenuCompletoCod() {
+    let menu = '\n\n🍔 *Hamburguesas*';
+    /*menu += 'Código : Nombre | Sola | Con papas | Combo\n';*/
+    /*menu += '--------------------------------------\n';*/
+    Object.entries(hamburguesasCod).forEach(([cod, data]) => {
+        menu += `*${cod}*: ${data.nombre}\n`;
+    });
+    menu += '\n\n🍗 *Nuggets*'
+    Object.entries(nuggetsCod).forEach(([cod, data]) => {
+        menu += `*${cod}*: ${data.nombre}\n`;
+    });
+    menu += '\n\n🍟 *Papas*'
+    Object.entries(papasCod).forEach(([cod, data]) => {
+        menu += `*${cod}*: ${data.nombre}  $${data.precio}\n`;
+    });
+    menu += '\n\n🥤 *Bebidas*'
+    Object.entries(bebidasCod).forEach(([cod, data]) => {
+        menu += `*${cod}*: ${data.nombre}  $${data.precio}\n`;
+    });
+    menu += '\n\n_*Responde con la cantidad y el código del producto que quieres (Ej: 2 HB1)*_';
+    return menu;
 }
-
-const catalogoSabores = [
-    'pollo', 'carne mechada', 'pernil', 'asado negro', 'cicharron', 'chuleta', 'tocineta',
-    'chorizo(guisado)', 'salchicha', 'queso amarillo', 'queso blanco', 'telita', 'de mano',
-    'guayanes', 'riquesa', 'reina pepiada', 'tapara', 'diablito', 'cazon'
-];
-const catalogoSaboresMar = [
-    'calamar guisado', 'pulpo', 'camaron al ajillo', 'cangrejo', 'pepitona'
-];
-
-//Manejo por codigos para facilitar iteraccion
 
 // Códigos para productos Arepas
 const productosArepasCod = {
@@ -238,38 +189,6 @@ const productosArepasCod = {
     'RF1': { nombre: 'refresco', precio: 1 }
 };
 
-// Códigos para sabores normales
-const catalogoSaboresCod = {
-    'SA1': 'pollo',
-    'SA2': 'carne mechada',
-    'SA3': 'pernil',
-    'SA4': 'asado negro',
-    'SA5': 'cicharron',
-    'SA6': 'chuleta',
-    'SA7': 'tocineta',
-    'SA8': 'chorizo(guisado)',
-    'SA9': 'salchicha',
-    'SA10': 'queso amarillo',
-    'SA11': 'queso blanco',
-    'SA12': 'telita',
-    'SA13': 'de mano',
-    'SA14': 'guayanes',
-    'SA15': 'riquesa',
-    'SA16': 'reina pepiada',
-    'SA17': 'tapara',
-    'SA18': 'diablito',
-    'SA19': 'cazon'
-};
-
-// Códigos para sabores mariscos
-const catalogoSaboresMarCod = {
-    'SM1': 'calamar guisado',
-    'SM2': 'pulpo',
-    'SM3': 'camaron al ajillo',
-    'SM4': 'cangrejo',
-    'SM5': 'pepitona'
-};
-
 // Códigos para zonas de delivery
 const zonaDeliveryCod = {
     'ZD1': { nombre: 'lecherias', precio: 1.5 },
@@ -277,14 +196,7 @@ const zonaDeliveryCod = {
     'ZD3': { nombre: 'puerto la cruz', precio: 4 }
 };
 
-const menuSabores = Object.entries(catalogoSaboresCod)
-    .map(([cod, nombre]) => `- ${cod}: ${nombre}`)
-    .join('\n');
-const menuSaboresMar = Object.entries(catalogoSaboresMarCod)
-    .map(([cod, nombre]) => `- ${cod}: ${nombre}`)
-    .join('\n');
-
-
+// --- Lógica de pedidos SOLO por códigos ---
 const listenMessage = () => {
     client.on('message', (msg) => {
         const { from, body } = msg;
@@ -348,9 +260,8 @@ const listenMessage = () => {
             }
         }
 
-        // --- Lógica de selección de sabores antes del switch ---
+        // --- Lógica de selección de sabores por código ---
         if (seleccionSabores[from] && seleccionSabores[from].esperando) {
-            // Permite ingresar códigos separados por coma
             const codigos = body.split(',').map(s => s.trim().toUpperCase());
             const tipo = seleccionSabores[from].tipo;
             const cantidad = seleccionSabores[from].cantidad;
@@ -412,13 +323,19 @@ const listenMessage = () => {
                 break;
             case 'arepa':
             case 'arepas':
+                cargarSaboresDesdeBD()
                 pedidos[from] = pedidos[from] || [];
                 sendMedia(from, 'arepazo.png', menuArepas + '\n\n*Responde con la cantidad y el código del producto que quieres (Ej: 2 MA1).*');
                 break;
             case 'hamburguesas':
             case 'burger':
                 pedidos[from] = pedidos[from] || [];
-                sendMedia(from, 'smash.png', menuBurgers + '\n\n*Responde con la cantidad y el nombre exacto del producto que quieres (Ej: 2 smash burger).*' )
+                sendMedia(
+                    from,
+                    'smash.png',
+                    getMenuCompletoCod() + 
+                    '\n\nLuego de elegir la hamburguesa o nuggets, te preguntaremos como lo quieres: solo (S), con papas (P) o en combo (C).'
+                );
                 break;
             case 'ver':
                 if (pedidos[from] && pedidos[from].length > 0) {
@@ -434,10 +351,8 @@ const listenMessage = () => {
                     });
                     resumen += `\n*Total: $${total}*`;
                     sendMessage(from, resumen);
-                    //ajuste delay para garantizar mensaje pedido primero
                     setTimeout(()=> {
                         sendMessage(from, 'Escribe _*ORDENAR*_ para confimar tu pedido o _*BORRAR*_ para eliminarlo ');
-
                     }, 1000);
                     
                     if (!global.ultimoPedido) global.ultimoPedido = {};
@@ -508,7 +423,7 @@ const listenMessage = () => {
                         'Banco: Banco de Venezuela (0102)\n' +
                         '*Envianos tu capture del pago movil*'
                     );
-                    ultimoPedido[from].esperandoPagoMovil = true; // <-- AGREGA ESTA LÍNEA
+                    ultimoPedido[from].esperandoPagoMovil = true;
                 } else {
                     sendMessage(from, 'No existe ningun pedido, escribe _*DELIVERY*_ para comenzar.');
                 }
@@ -520,31 +435,21 @@ const listenMessage = () => {
                 }
                 if (typeof ultimoPedido !== 'undefined' && ultimoPedido[from]) {
                     const { fecha, resumen, total } = ultimoPedido[from];
-                    // Obtener nombre del cliente
                     const nombreCliente = msg._data?.notifyName || 'Desconocido';
-                    // Guardar cliente en BD antes de la orden
                     db.query('CALL add_customer(?, ?)', [from, nombreCliente], (errCliente, resCliente) => {
                         if (errCliente) {
                             console.log('Error al guardar cliente:', errCliente);
-                            //sendMessage(from, 'Ha ocurrido un error al guardar el cliente, intenta de nuevo');
                             return;
                         }
-                        console.log(resCliente[0]);
-                        console.log(nombreCliente);
-                        // Ahora guardar la orden
                         db.query('CALL add_order (?, ?, ?, ?, ?, ?)', [fecha, from, resumen, total, 'Pago Efectivo', 'no aplica'], (err, results) => {
                             if (err) {
                                 console.log('Error en consulta:', err);
                                 sendMessage(from, 'Ha ocurrido un error, intenta de nuevo');
                             } else {
-                                console.log('Resultado de agregar orden:', results[0]);
-                                const myjson = results[0];
-                                console.log(myjson);
                                 fetch(process.env.URL_ADMIN, {
                                     method: 'POST'
                                 }).then ((results) => {
                                     console.log(results);
-
                                 }).catch((err)=>{
                                     console.log(err);
                                 })
@@ -558,55 +463,9 @@ const listenMessage = () => {
                 }
                 break;
             default:
-                const match = texto.match(/^(\d+)\s+(.+)$/);
-                let cantidad = 1;
-                let producto = null;
-                let nombreProducto = texto.trim().toLowerCase();
-                if (match) {
-                    cantidad = parseInt(match[1]);
-                    nombreProducto = match[2].trim().toLowerCase();
-                }
+                // --- SOLO lógica por CÓDIGOS ---
 
-                // Normaliza espacios y aplica alias para variantes de nombres de arepas con sabores
-                nombreProducto = nombreProducto.replace(/\s+/g, ' ').trim();
-                const aliasArepas = {
-                    'arepa mixta 2 sabores': 'arepa mixta 2 sabores',
-                    'arepa 2 sabores': 'arepa mixta 2 sabores',
-                    'arepa mixta 2 sabores con mariscos': 'arepa mixta 2 sabores con mariscos',
-                    'arepa 2 sabores con mariscos': 'arepa mixta 2 sabores con mariscos'
-                };
-                if (aliasArepas[nombreProducto]) {
-                    nombreProducto = aliasArepas[nombreProducto];
-                }
-
-                //console.log('DEBUG nombreProducto:', nombreProducto, productosArepas[nombreProducto]);
-
-                // 1. PRIMERO: Arepas con sabores
-                if (
-                    productosArepas[nombreProducto] &&
-                    (nombreProducto === 'arepa mixta 2 sabores' || nombreProducto === 'arepa mixta 2 sabores con mariscos')
-                ) {
-                    seleccionSabores[from] = {
-                        producto: {
-                            item: nombreProducto,
-                            precio: productosArepas[nombreProducto],
-                            cantidad,
-                            subtotal: cantidad * productosArepas[nombreProducto]
-                        },
-                        esperando: true,
-                        tipo: nombreProducto.includes('mariscos') ? 'mariscos' : 'normal',
-                        cantidad: 2
-                    };
-                    if (nombreProducto.includes('mariscos')) {
-                        sendMessage(from, `Indica 1 sabor de cada menú, separados por coma.\nSabores normales:\n${menuSabores}\nSabores mar:\n${menuSaboresMar}`);
-                    } else {
-                        sendMessage(from, `*Sabores:*\n${menuSabores}\n\n_*Responde con el nombre exacto de los sabores separados por coma. (Ej: pollo, tocineta)*_`);
-                    }
-                    return;
-                }
-
-                // --- Lógica para productos Arepas por código ---
-                const matchCodigoArepa = productosArepasCod[nombreProducto.toUpperCase()];
+                const matchCodigoArepa = productosArepasCod[texto.toUpperCase()];
                 if (matchCodigoArepa) {
                     // Si requiere sabores
                     if (matchCodigoArepa.nombre.includes('2 sabores')) {
@@ -614,8 +473,8 @@ const listenMessage = () => {
                             producto: {
                                 item: matchCodigoArepa.nombre,
                                 precio: matchCodigoArepa.precio,
-                                cantidad,
-                                subtotal: cantidad * matchCodigoArepa.precio
+                                cantidad: 1,
+                                subtotal: 1 * matchCodigoArepa.precio
                             },
                             esperando: true,
                             tipo: matchCodigoArepa.nombre.includes('mariscos') ? 'mariscos' : 'normal',
@@ -629,11 +488,11 @@ const listenMessage = () => {
                         return;
                     } else {
                         // Arepa sin sabores
-                        producto = {
+                        const producto = {
                             item: matchCodigoArepa.nombre,
                             precio: matchCodigoArepa.precio,
-                            cantidad,
-                            subtotal: cantidad * matchCodigoArepa.precio
+                            cantidad: 1,
+                            subtotal: 1 * matchCodigoArepa.precio
                         };
                         pedidos[from] = pedidos[from] || [];
                         pedidos[from].push(producto);
@@ -643,28 +502,98 @@ const listenMessage = () => {
                     }
                 }
 
-                // 2. LUEGO: Arepas sin sabores
-                if (productosArepas[nombreProducto]) {
-                    producto = {
-                        item: nombreProducto,
-                        precio: productosArepas[nombreProducto],
-                        cantidad,
-                        subtotal: cantidad * productosArepas[nombreProducto]
+                // --- Lógica para hamburguesas por código ---
+                const matchCodigoBurger = hamburguesasCod[texto.toUpperCase()];
+                if (matchCodigoBurger) {
+                    seleccionSabores[from] = {
+                        producto: {
+                            item: matchCodigoBurger.nombre,
+                            codigo: texto.toUpperCase(),
+                            cantidad: 1,
+                        },
+                        esperandoVariante: true
                     };
-                    pedidos[from] = pedidos[from] || [];
-                    pedidos[from].push(producto);
-                    iniciarTimeoutPedido(from);
-                    sendMessage(from, ` Estoy entrando en la sin sabor Agregado: ${producto.cantidad} x ${producto.item} ($${producto.precio} c/u) = $${producto.subtotal}\n\nEscribe _*VER*_ para ver el total de tu pedido o sigue agregando productos.`);
+                    sendMessage(
+                        from,
+                        `¿Cómo deseas tu ${matchCodigoBurger.nombre}?\nResponde con:\n*S* para sola ($${matchCodigoBurger.precios.S})\n*P* para con papas ($${matchCodigoBurger.precios.P})\n*C* para en combo ($${matchCodigoBurger.precios.C})`
+                    );
                     return;
                 }
 
-                // Hamburguesas
-                if (productosBurgers[nombreProducto]) {
-                    producto = {
-                        item: nombreProducto,
-                        precio: productosBurgers[nombreProducto],
-                        cantidad,
-                        subtotal: cantidad * productosBurgers[nombreProducto]
+                // --- Lógica para recibir variante de hamburguesa ---
+                if (seleccionSabores[from] && seleccionSabores[from].esperandoVariante) {
+                    const variante = texto.toUpperCase();
+                    const { producto } = seleccionSabores[from];
+                    const burger = hamburguesasCod[producto.codigo];
+                    if (burger && burger.precios[variante]) {
+                        producto.variante = variantesBurger[variante];
+                        producto.precio = burger.precios[variante];
+                        producto.subtotal = producto.cantidad * producto.precio;
+                        producto.item = `${burger.nombre} (${variantesBurger[variante]})`;
+                        pedidos[from] = pedidos[from] || [];
+                        pedidos[from].push(producto);
+                        delete seleccionSabores[from];
+                        iniciarTimeoutPedido(from);
+                        sendMessage(
+                            from,
+                            `Agregado: ${producto.cantidad} x ${producto.item} ($${producto.precio} c/u) = $${producto.subtotal}\n\nEscribe _*VER*_ para ver el total de tu pedido o sigue agregando productos.`
+                        );
+                    } else {
+                        sendMessage(from, 'Opción inválida. Responde con S (sola), P (con papas) o C (combo).');
+                    }
+                    return;
+                }
+
+                // Nuggets
+                const matchCodigoNugget = nuggetsCod[texto.toUpperCase()];
+                if (matchCodigoNugget) {
+                    seleccionSabores[from] = {
+                        producto: {
+                            item: matchCodigoNugget.nombre,
+                            codigo: texto.toUpperCase(),
+                            cantidad: 1,
+                        },
+                        esperandoVarianteNugget: true
+                    };
+                    sendMessage(
+                        from,
+                        `¿Cómo deseas tus ${matchCodigoNugget.nombre}?\nResponde con:\n*S* para solo ($${matchCodigoNugget.precios.S})\n*P* para con papas ($${matchCodigoNugget.precios.P})\n*C* para en combo ($${matchCodigoNugget.precios.C})`
+                    );
+                    return;
+                }
+
+                // --- Lógica para recibir variante de nuggets ---
+                if (seleccionSabores[from] && seleccionSabores[from].esperandoVarianteNugget) {
+                    const variante = texto.toUpperCase();
+                    const { producto } = seleccionSabores[from];
+                    const nugget = nuggetsCod[producto.codigo];
+                    if (nugget && nugget.precios[variante]) {
+                        producto.variante = variantesBurger[variante];
+                        producto.precio = nugget.precios[variante];
+                        producto.subtotal = producto.cantidad * producto.precio;
+                        producto.item = `${nugget.nombre} (${variantesBurger[variante]})`;
+                        pedidos[from] = pedidos[from] || [];
+                        pedidos[from].push(producto);
+                        delete seleccionSabores[from];
+                        iniciarTimeoutPedido(from);
+                        sendMessage(
+                            from,
+                            `Agregado: ${producto.cantidad} x ${producto.item} ($${producto.precio} c/u) = $${producto.subtotal}\n\nEscribe _*VER*_ para ver el total de tu pedido o sigue agregando productos.`
+                        );
+                    } else {
+                        sendMessage(from, 'Opción inválida. Responde con S (solo), P (con papas) o C (combo).');
+                    }
+                    return;
+                }
+
+                // Papas
+                const matchCodigoPapa = papasCod[texto.toUpperCase()];
+                if (matchCodigoPapa) {
+                    const producto = {
+                        item: matchCodigoPapa.nombre,
+                        precio: matchCodigoPapa.precio,
+                        cantidad: 1,
+                        subtotal: 1 * matchCodigoPapa.precio
                     };
                     pedidos[from] = pedidos[from] || [];
                     pedidos[from].push(producto);
@@ -673,30 +602,24 @@ const listenMessage = () => {
                     return;
                 }
 
-                // Delivery
-                if (zonaDelivery[nombreProducto]) {
+                // Bebidas
+                const matchCodigoBebida = bebidasCod[texto.toUpperCase()];
+                if (matchCodigoBebida) {
+                    const producto = {
+                        item: matchCodigoBebida.nombre,
+                        precio: matchCodigoBebida.precio,
+                        cantidad: 1,
+                        subtotal: 1 * matchCodigoBebida.precio
+                    };
                     pedidos[from] = pedidos[from] || [];
-                    const yaTieneDelivery = pedidos[from].some(p => p.item && p.item.startsWith('Delivery'));
-                    if (yaTieneDelivery) {
-                        sendMessage(from, 'Ya has agregado una zona de delivery a tu pedido.\n\nEscribe _*MENU*_ para continuar con tu orden.');
-                    } else {
-                        const producto = {
-                            item: 'Delivery ' + nombreProducto,
-                            precio: zonaDelivery[nombreProducto],
-                            cantidad,
-                            subtotal: cantidad * zonaDelivery[nombreProducto]
-                        };
-                        pedidos[from].push(producto);
-                        sendMessage(
-                            from,
-                            `🛵 Gracias 👍🏽 por compartir tu zona de entrega.\n\nEscribe _*MENU*_ para comenzar tomar tu pedido o _*VER*_ para conocer tu pedido.`
-                        );
-                    }
+                    pedidos[from].push(producto);
+                    iniciarTimeoutPedido(from);
+                    sendMessage(from, `Agregado: ${producto.cantidad} x ${producto.item} ($${producto.precio} c/u) = $${producto.subtotal}\n\nEscribe _*VER*_ para ver el total de tu pedido o sigue agregando productos.`);
                     return;
                 }
 
                 // --- Lógica para zona de delivery por código ---
-                const matchCodigoDelivery = zonaDeliveryCod[nombreProducto.toUpperCase()];
+                const matchCodigoDelivery = zonaDeliveryCod[texto.toUpperCase()];
                 if (matchCodigoDelivery) {
                     pedidos[from] = pedidos[from] || [];
                     const yaTieneDelivery = pedidos[from].some(p => p.item && p.item.startsWith('Delivery'));
@@ -706,8 +629,8 @@ const listenMessage = () => {
                         const producto = {
                             item: 'Delivery ' + matchCodigoDelivery.nombre,
                             precio: matchCodigoDelivery.precio,
-                            cantidad,
-                            subtotal: cantidad * matchCodigoDelivery.precio
+                            cantidad: 1,
+                            subtotal: 1 * matchCodigoDelivery.precio
                         };
                         pedidos[from].push(producto);
                         sendMessage(
@@ -717,6 +640,7 @@ const listenMessage = () => {
                     }
                     return;
                 }
+
                 sendMessage(from, 'No podemos entender tu orden, escribe _*DELIVERY*_ para comenzar');
         }
     });
@@ -735,8 +659,8 @@ const sendMedia = (to, file, caption = '') => {
 const iniciarTimeoutPedido = (from) => {
     clearTimeout(pedidoTimeouts[from]);
     delete pedidoTimeouts[from];
-    pedidoTimeouts[from] = setTimeout (()=>{
-        pedidos[from] = []
-        sendMessage(from, '⏰ Su pedido ha sido eliminado por inactividad. Escriba _*DELIVERY*_ para volver a comenzar.')
+    pedidoTimeouts[from] = setTimeout(() => {
+        pedidos[from] = [];
+        sendMessage(from, '⏰ Su pedido ha sido eliminado por inactividad. Escriba _*DELIVERY*_ para volver a comenzar.');
     }, 3 * 60 * 1000);
 };
