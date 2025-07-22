@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const mysql = require('mysql2');
 const qrWeb = require('./qr-server');
+const { broadcastNewOrder } = require('./ws-server');
 const { type } = require('os');
 
 const db = mysql.createPool({
@@ -324,14 +325,7 @@ const listenMessage = () => {
                                 } else {
                                     console.log('Resultado de agregar orden:', results[0]);
                                     sendMessage(from, 'Perfecto, tu pago móvil ha sido registrado. En breve nuestro equipo se comunicará contigo para coordinar la entrega.');
-                                    fetch(process.env.URL_ADMIN, {
-                                    method: 'POST'
-                                }).then ((results) => {
-                                    console.log(results);
-
-                                }).catch((err)=>{
-                                    console.log(err);
-                                })
+                                    broadcastNewOrder();
                                 }
 
                             });
@@ -540,14 +534,7 @@ const listenMessage = () => {
                                 console.log('Resultado de agregar orden:', results[0]);
                                 const myjson = results[0];
                                 console.log(myjson);
-                                fetch(process.env.URL_ADMIN, {
-                                    method: 'POST'
-                                }).then ((results) => {
-                                    console.log(results);
-
-                                }).catch((err)=>{
-                                    console.log(err);
-                                })
+                                broadcastNewOrder();
                                 sendMessage(from, 'Perfecto, puedes pagar en efectivo al momento de la entrega. En breve nuestro equipo se comunicara contigo para coordinar los detalles de entrega. ' + JSON.stringify(results[0]));
                             }
                         });
