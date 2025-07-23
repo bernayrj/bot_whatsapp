@@ -30,7 +30,7 @@ db.getConnection((err, connection) => {
     }
 });
 
-console.log('BIENVENIDO A CHATBOT DE WHATSAPP');
+console.log('INICIANDO CHATBOT LOS PRIMOS...');
 
 // Catálogos de sabores por código
 let catalogoSaboresCod = {};
@@ -51,7 +51,7 @@ function actualizarTasa() {
         }
         // Ajusta según cómo retorna tu SP
         tasaActual = results[0][0]?.tasa || null;
-        console.log('Tasa actualizada:', tasaActual);
+        console.log('Obteniendo tasa dolar:', tasaActual);
     });
 }
 
@@ -82,14 +82,16 @@ function cargarSaboresDesdeBD() {
         });
 
         menuSabores = Object.entries(catalogoSaboresCod)
-            .map(([cod, sabor]) => `- ${cod}: ${sabor}`)
+            .map(([cod, sabor]) => `- *${cod}*: ${sabor}`)
             .join('\n');
         menuSaboresMar = Object.entries(catalogoSaboresMarCod)
-            .map(([cod, sabor]) => `- ${cod}: ${sabor}`)
+            .map(([cod, sabor]) => `- *${cod}*: ${sabor}`)
             .join('\n');
-        console.log('Sabores actualizados desde BD');
+        console.log('Actualizando sabores (rellenos), desde BD...');
     });
 }
+
+cargarSaboresDesdeBD();
 
 const client = new Client({
     authStrategy: new LocalAuth()
@@ -125,26 +127,18 @@ client.on('disconnected', (reason) => {
 
 client.initialize();
 
-// Menú por códigos
-const menuArepas = `
-🫓 *Menú de Arepas*:
-- MA1: Arepa mixta 2 sabores $3
-- MA2: Arepa mixta 2 sabores con mariscos $3,5
-- AG1: Agua 1$
-- RF1: Refresco 1$
-`;
-
-const menuDelivery =
-`🛵 *DELIVERY* 🛵
-- ZD1: Lecherias $1.5
-- ZD2: Barcelona $3
-- ZD3: Puerto la cruz $4`;
-
 const pedidos = {};
 const seleccionSabores = {};
 const pedidoTimeouts = {};
 
 // Catálogos SOLO por código
+
+const menuDelivery =
+`🛵 *DELIVERY* 🛵
+- ZD1: Lechería $1.5
+- ZD2: Barcelona $3
+- ZD3: Puerto la cruz $4`;
+
 const hamburguesasCod = {
     'HB1': { nombre: 'Smash burger', precios: { S: 3, P: 4, C: 5 } },
     'HB2': { nombre: 'Doble Smash Burger', precios: { S: 4.5, P: 5.5, C: 7 } },
@@ -185,45 +179,54 @@ const variantesBurger = {
     'C': 'En combo'
 };
 
-function getMenuCompletoCod() {
-    let menu = '\n\n🍔 *Hamburguesas*';
-    /*menu += 'Código : Nombre | Sola | Con papas | Combo\n';*/
-    /*menu += '--------------------------------------\n';*/
-    Object.entries(hamburguesasCod).forEach(([cod, data]) => {
-        menu += `*${cod}*: ${data.nombre}\n`;
-    });
-    menu += '\n\n🍗 *Nuggets*'
-    Object.entries(nuggetsCod).forEach(([cod, data]) => {
-        menu += `*${cod}*: ${data.nombre}\n`;
-    });
-    menu += '\n\n🍟 *Papas*'
-    Object.entries(papasCod).forEach(([cod, data]) => {
-        menu += `*${cod}*: ${data.nombre}  $${data.precio}\n`;
-    });
-    menu += '\n\n🥤 *Bebidas*'
-    Object.entries(bebidasCod).forEach(([cod, data]) => {
-        menu += `*${cod}*: ${data.nombre}  $${data.precio}\n`;
-    });
-    menu += '\n\n_*Responde con la cantidad y el código del producto que quieres (Ej: 2 HB1)*_';
-    return menu;
-}
-
 // Códigos para productos Arepas
-const productosArepasCod = {
-    'MA1': { nombre: 'arepa mixta 2 sabores', precio: 3 },
-    'MA2': { nombre: 'arepa mixta 2 sabores con mariscos', precio: 3.5 },
-    'AG1': { nombre: 'agua', precio: 1 },
-    'RF1': { nombre: 'refresco', precio: 1 }
+const arepasCod = {
+    'MA1': { nombre: 'Arepa mixta 2 sabores', precio: 3 },
+    'MA2': { nombre: 'Arepa mixta 2 sabores con mariscos', precio: 3.5 }
 };
 
 // Códigos para zonas de delivery
 const zonaDeliveryCod = {
-    'ZD1': { nombre: 'lecherias', precio: 1.5 },
-    'ZD2': { nombre: 'barcelona', precio: 3 },
-    'ZD3': { nombre: 'puerto la cruz', precio: 4 }
+    'ZD1': { nombre: 'Lechería', precio: 1.5 },
+    'ZD2': { nombre: 'Barcelona', precio: 3 },
+    'ZD3': { nombre: 'Puerto la Cruz', precio: 4 }
 };
 
-// --- Lógica de pedidos SOLO por códigos ---
+function getMenuSmashCod() {
+    let menu = '\n\n🍔 *Hamburguesas*\n';
+    Object.entries(hamburguesasCod).forEach(([cod, data]) => {
+        menu += `- *${cod}*: ${data.nombre}\n`;
+    });
+    menu += '\n\n🍗 *Nuggets*\n'
+    Object.entries(nuggetsCod).forEach(([cod, data]) => {
+        menu += `- *${cod}*: ${data.nombre}\n`;
+    });
+    menu += '\n\n🍟 *Papas*\n'
+    Object.entries(papasCod).forEach(([cod, data]) => {
+        menu += `- *${cod}*: ${data.nombre}  $${data.precio}\n`;
+    });
+    menu += '\n\n🥤 *Bebidas*\n'
+    Object.entries(bebidasCod).forEach(([cod, data]) => {
+        menu += `- *${cod}*: ${data.nombre}  $${data.precio}\n`;
+    });
+    menu += '\n\n_*Responde con la cantidad y el código del producto que quieres (Ejemplo: 2 HB1 - para smash burger)*_';
+    return menu;
+}
+
+function getMenuArepazoCod() {
+    let menu = '\n\n🫓 *Arepas*\n';
+    Object.entries(arepasCod).forEach(([cod, data]) => {
+        menu += `- *${cod}*: ${data.nombre}  $${data.precio}\n`;
+    });
+    menu += '\n\n🥤 *Bebidas*\n'
+    Object.entries(bebidasCod).forEach(([cod, data]) => {
+        menu += `- *${cod}*: ${data.nombre}  $${data.precio}\n`;
+    });
+    return menu;
+}
+
+
+// --- Lógica de pedidos  por códigos ---
 const listenMessage = () => {
     client.on('message', (msg) => {
         const { from, body } = msg;
@@ -256,13 +259,14 @@ const listenMessage = () => {
                                 console.log('Error al guardar cliente:', errCliente);
                                 return;
                             }
+                            let ordenNum = null;
                             db.query('CALL add_order (?, ?, ?, ?, ?, ?)', [fecha, from, resumen, total, 'Pago Movil', filename], (err, results) => {
                                 if (err) {
                                     console.log('Error en consulta:', err);
                                     sendMessage(from, 'Ha ocurrido un error, intenta de nuevo');
                                 } else {
-                                    console.log('Resultado de agregar orden:', results[0]);
-                                    sendMessage(from, 'Perfecto, tu pago móvil ha sido registrado. En breve nuestro equipo se comunicará contigo para coordinar la entrega.');
+                                    ordenNum = results[0][0]?.orden || null;
+                                    sendMessage(from, 'Perfecto, tu pago móvil ha sido registrado para su validacion. En breve nuestro equipo se comunicará contigo para coordinar la entrega.\n\n'+ nombreCliente + ', tu orden es: '+ ordenNum);
                                     broadcastNewOrder();
                                 }
 
@@ -328,7 +332,7 @@ const listenMessage = () => {
         if (saludos.includes(texto)) {
             sendMedia(
                 from, 'logo1.jpg',
-                '🤗 *HOLA BIENVENIDO* 🤗\n\n *EL AREPAZO*🫓 y *SMASH RICO*🍔\n\nEscribe _*DELIVERY*_ para conocer tu zona de entrega.'
+                '*Hola Bienvenido a:*\n\n *EL Arepazo*🫓 y\n *Smash Rico*🍔\n\nEscribe _*DELIVERY*_ para conocer tu zona de entrega.'
             );
             return;
         }
@@ -338,16 +342,19 @@ const listenMessage = () => {
         switch (texto) {
             case 'delivery':
                 pedidos[from] = pedidos[from] || [];
-                sendMessage(from, menuDelivery + '\n\nEscribe el código de la zona de entrega de tu pedido. Ej: ZD1');
+                sendMessage(from, menuDelivery + '\n\nEscribe el código de la zona de entrega de tu pedido. Ejempo: ZD1- para Lechería');
                 break;
             case 'menu':
-                sendMessage(from, '¿Qué te provoca hoy? \n\n🫓 *Arepas*  \n🍔 *Burger*\n\nEscribe _*AREPAS*_ o _*BURGER*_ para conocer nuestras opciones');
+                sendMessage(from, '¿Qué te provoca hoy? \n\n🫓 *Arepas*  \n🍔 *Burger*\n\nEscribe _*AREPAS*_ o _*BURGER*_ para conocer nuestro menú');
                 break;
             case 'arepa':
             case 'arepas':
-                cargarSaboresDesdeBD();
                 pedidos[from] = pedidos[from] || [];
-                sendMedia(from, 'arepazo.png', menuArepas + '\n\n*Responde con la cantidad y el código del producto que quieres (Ej: 2 MA1).*');
+                sendMedia(from, 
+                'arepazo.png', 
+                getMenuArepazoCod() + 
+                '\n\n_*Responde con la cantidad y el código del producto que quieres (Ejemplo: 2 MA1 - para arepa mixta 2 sabores).*_');
+                cargarSaboresDesdeBD();
                 break;
             case 'hamburguesas':
             case 'burger':
@@ -355,7 +362,7 @@ const listenMessage = () => {
                 sendMedia(
                     from,
                     'smash.png',
-                    getMenuCompletoCod() + 
+                    getMenuSmashCod() + 
                     '\n\nLuego de elegir la hamburguesa o nuggets, te preguntaremos como lo quieres: solo (S), con papas (P) o en combo (C).'
                 );
                 break;
@@ -465,13 +472,15 @@ const listenMessage = () => {
                             console.log('Error al guardar cliente:', errCliente);
                             return;
                         }
+                        let ordenNum = null;
                         db.query('CALL add_order (?, ?, ?, ?, ?, ?)', [fecha, from, resumen, total, 'Pago Efectivo', 'no aplica'], (err, results) => {
                             if (err) {
                                 console.log('Error en consulta:', err);
                                 sendMessage(from, 'Ha ocurrido un error, intenta de nuevo');
                             } else {
+                                ordenNum = results[0][0]?.orden || null;
                                 broadcastNewOrder();
-                                sendMessage(from, 'Perfecto, puedes pagar en efectivo al momento de la entrega. En breve nuestro equipo se comunicara contigo para coordinar los detalles de entrega. ' + JSON.stringify(results[0]));
+                                sendMessage(from, 'Perfecto, puedes pagar en efectivo al momento de la entrega. En breve nuestro equipo se comunicara contigo para coordinar los detalles de entrega.\n\n'+'Tu orden es: ' + ordenNum);
                             }
                         });
                     });
@@ -483,7 +492,7 @@ const listenMessage = () => {
             default:
                 // --- SOLO lógica por CÓDIGOS ---
 
-                const matchCodigoArepa = productosArepasCod[texto.toUpperCase()];
+                const matchCodigoArepa = arepasCod[texto.toUpperCase()];
                 if (matchCodigoArepa) {
                     // Si requiere sabores
                     if (matchCodigoArepa.nombre.includes('2 sabores')) {
@@ -501,7 +510,7 @@ const listenMessage = () => {
                         if (matchCodigoArepa.nombre.includes('mariscos')) {
                             sendMessage(from, `Indica 1 código de cada menú, separados por coma.\nSabores normales:\n${menuSabores}\nSabores mar:\n${menuSaboresMar}`);
                         } else {
-                            sendMessage(from, `*Sabores:*\n${menuSabores}\n\n_*Responde con los códigos exactos de los sabores separados por coma. (Ej: SA1, SA4)*_`);
+                            sendMessage(from, `*Sabores:*\n${menuSabores}\n\n_*Responde con los códigos exactos de los sabores separados por coma. (Ejemplo: SA1, SA7 - para pollo, tocineta )*_`);
                         }
                         return;
                     } else {
