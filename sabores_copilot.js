@@ -7,6 +7,7 @@ const mysql = require('mysql2');
 const qrWeb = require('./qr-server');
 const { broadcastNewOrder } = require('./ws-server');
 const cron = require('node-cron');
+const rimraf = require('rimraf');
 
 // Conexión a BD MySQL
 const db = mysql.createPool({
@@ -97,6 +98,10 @@ const client = new Client({
     authStrategy: new LocalAuth()
 });
 
+const sessionPath = path.join(__dirname, '.wwebjs_auth');
+
+let isLoggedIn = false;
+
 client.on('qr', qr => {
     qrWeb.setQR(qr);
     qrWeb.setStatus('Esperando escaneo...');
@@ -111,6 +116,7 @@ client.on('ready', () => {
 });
 
 client.on('authenticated', () => {
+    isLoggedIn = true;
     qrWeb.setStatus('Autenticado correctamente');
     console.log('AUTHENTICATED');
 });
@@ -120,12 +126,47 @@ client.on('auth_failure', msg => {
     console.error('AUTHENTICATION FAILURE', msg);
 });
 
-client.on('disconnected', (reason) => {
+client.on('disconnected', async(reason) => {
     qrWeb.setStatus('Desconectado');
     console.log('Client was logged out', reason);
+    isLoggedIn = false;
+    await cleanupSessionFiles();
 });
 
 client.initialize();
+
+async function logout() {
+    if (isLoggedIn) {
+        try {
+            await client.logout();
+            console.log("Logged out successfully");
+            await cleanupSessionFiles(); // Limpiar después de cerrar sesión
+        } catch (error) {
+            console.error("Error during logout:", error);
+        }
+    } else {
+        console.log("Not logged in, cannot logout");
+    }
+}
+
+// Función para limpiar los archivos de sesión
+async function cleanupSessionFiles() {
+    // Verifica si la carpeta de sesión existe y elimínala
+    try {
+        /*console.log("fs:", fs);*/
+        if ( fs.existsSync(sessionPath)) {
+             fs.rm(sessionPath, { recursive:true, force:true});
+            console.log("Session files cleaned up.");
+            return;
+        }
+    } catch (err) {
+        if (err.code === 'ENOENT') {
+            console.log("Session path does not exist.");
+        } else {
+            console.error("Error cleaning up session files:", err);
+        }
+    }
+};
 
 const pedidos = {};
 const seleccionSabores = {};
@@ -140,16 +181,16 @@ const menuDelivery =
 - ZD3: Puerto la cruz $4`;
 
 const hamburguesasCod = {
-    'HB1': { nombre: 'Smash burger', precios: { S: 3, P: 4, C: 5 } },
-    'HB2': { nombre: 'Doble Smash Burger', precios: { S: 4.5, P: 5.5, C: 7 } },
-    'HB3': { nombre: 'Triple Smash Burger', precios: { S: 5.5, P: 6.5, C: 8 } },
-    'HB4': { nombre: 'Clásica', precios: { S: 4.5, P: 5.5, C: 7 } },
-    'HB5': { nombre: 'Doble Clásica', precios: { S: 5.5, P: 6.5, C: 8 } },
-    'HB6': { nombre: 'Triple Clásica', precios: { S: 7, P: 8, C: 9.5 } },
-    'HB7': { nombre: 'Smash Rico', precios: { S: 4, P: 5, C: 6.5 } },
-    'HB8': { nombre: 'Doble Smash Rico', precios: { S: 5.5, P: 6.5, C: 8 } },
-    'HB9': { nombre: 'Triple Smash Rico', precios: { S: 6, P: 7, C: 8.5 } },
-    'HB10': { nombre: 'Keto Burger', precios: { S: 3.5, P: 4.5, C: 6 } },    
+    'HB1': { nombre: 'Smash burger', descripcion: 'Pan de batata, carne smash, queso, ketchup y mayonesa', precios: { S: 3, P: 4, C: 5 } },
+    'HB2': { nombre: 'Doble Smash Burger', descripcion: 'Doble carne', precios: { S: 4.5, P: 5.5, C: 7 } },
+    'HB3': { nombre: 'Triple Smash Burger', descripcion: 'Triple carne', precios: { S: 5.5, P: 6.5, C: 8 } },
+    'HB4': { nombre: 'Clásica', descripcion: 'Pan de batata, carne smash, tocineta, queso, ketchup y mayonesa', precios: { S: 4.5, P: 5.5, C: 7 } },
+    'HB5': { nombre: 'Doble Clásica', descripcion: 'Doble carne', precios: { S: 5.5, P: 6.5, C: 8 } },
+    'HB6': { nombre: 'Triple Clásica', descripcion: 'Triple carne', precios: { S: 7, P: 8, C: 9.5 } },
+    'HB7': { nombre: 'Smash Rico', descripcion: 'Pan de batata, carne smash con mermelada de tocineta, queso, salsa relish', precios: { S: 4, P: 5, C: 6.5 } },
+    'HB8': { nombre: 'Doble Smash Rico', descripcion: 'Doble carne', precios: { S: 5.5, P: 6.5, C: 8 } },
+    'HB9': { nombre: 'Triple Smash Rico',descripcion: 'Triple carne', precios: { S: 6, P: 7, C: 8.5 } },
+    'HB10': { nombre: 'Keto Burger', descripcion: 'Lechuga, carne, tocienta, ketchup y mayonesa', precios: { S: 3.5, P: 4.5, C: 6 } },    
 };
 
 const nuggetsCod = {
@@ -195,21 +236,23 @@ const zonaDeliveryCod = {
 function getMenuSmashCod() {
     let menu = '\n\n🍔 *Hamburguesas*\n';
     Object.entries(hamburguesasCod).forEach(([cod, data]) => {
-        menu += `- *${cod}*: ${data.nombre}\n`;
+        menu += `- *${cod}*:`;
+        menu += ` *${data.nombre}*:\n`;
+        menu += ` _${data.descripcion}_\n\n`;
     });
-    menu += '\n\n🍗 *Nuggets*\n'
+    menu += '🍗 *Nuggets de pollo*\n'
     Object.entries(nuggetsCod).forEach(([cod, data]) => {
         menu += `- *${cod}*: ${data.nombre}\n`;
     });
-    menu += '\n\n🍟 *Papas*\n'
+    menu += '\n🍟 *Papas fritas*\n'
     Object.entries(papasCod).forEach(([cod, data]) => {
         menu += `- *${cod}*: ${data.nombre}  $${data.precio}\n`;
     });
-    menu += '\n\n🥤 *Bebidas*\n'
+    menu += '\n🥤 *Bebidas*\n'
     Object.entries(bebidasCod).forEach(([cod, data]) => {
         menu += `- *${cod}*: ${data.nombre}  $${data.precio}\n`;
     });
-    menu += '\n\n_*Responde con la cantidad y el código del producto que quieres (Ejemplo: 2 HB1 - para smash burger)*_';
+    menu += '\n_*Responde con la cantidad y el código del producto que quieres (Ejemplo: 2 HB1 - para smash burger)*_';
     return menu;
 }
 
@@ -336,8 +379,6 @@ const listenMessage = () => {
             );
             return;
         }
-
-        cargarSaboresDesdeBD();
 
         switch (texto) {
             case 'delivery':
