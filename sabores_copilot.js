@@ -8,6 +8,15 @@ const qrWeb = require('./qr-server');
 const { broadcastNewOrder } = require('./ws-server');
 const cron = require('node-cron');
 const rimraf = require('rimraf');
+const EventEmitter = require('events');
+
+// Event emitter
+const emitter = new EventEmitter();
+
+// Erase files on clientDisconnect event
+emitter.on('clientDisconnect', async ()=>{
+    await cleanupSessionFiles();
+})
 
 // Conexión a BD MySQL
 const db = mysql.createPool({
@@ -130,7 +139,8 @@ client.on('disconnected', async(reason) => {
     qrWeb.setStatus('Desconectado');
     console.log('Client was logged out', reason);
     isLoggedIn = false;
-    await cleanupSessionFiles();
+    emitter.emit('clientDisconnect');
+    //await cleanupSessionFiles();
 });
 
 client.initialize();
@@ -155,7 +165,13 @@ async function cleanupSessionFiles() {
     try {
         /*console.log("fs:", fs);*/
         if ( fs.existsSync(sessionPath)) {
-             fs.rm(sessionPath, { recursive:true, force:true});
+             fs.rm(sessionPath, { recursive:true, force:true}, (err)=>{
+                if(err){
+                    console.err(err.message);
+                    return;
+                }
+                console.log('Files deleted successfuly')
+             });
             console.log("Session files cleaned up.");
             return;
         }

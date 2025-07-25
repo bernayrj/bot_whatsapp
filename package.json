@@ -4,7 +4,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon sabores_copilot.js"
+    "start": "nodemon sabores_copilot.js",
+    "dev": "nodemon sabores_copilot.js"
   },
   "keywords": [],
   "author": "",
