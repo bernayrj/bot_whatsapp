@@ -15,7 +15,9 @@ const emitter = new EventEmitter();
 
 // Erase files on clientDisconnect event
 emitter.on('clientDisconnect', async ()=>{
-    await cleanupSessionFiles();
+    client.destroy().then(async ()=>{ // destroy de client
+        await cleanupSessionFiles(); // clean up session files
+    })
 })
 
 // Conexión a BD MySQL
