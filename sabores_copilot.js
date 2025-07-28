@@ -7,6 +7,7 @@ const mysql = require('mysql2');
 const qrWeb = require('./qr-server');
 const { broadcastNewOrder } = require('./ws-server');
 const cron = require('node-cron');
+const rimraf = require('rimraf');
 
 // Conexión a BD MySQL
 const db = mysql.createPool({
@@ -114,113 +115,37 @@ const sessionPath = path.join(__dirname, '.wwebjs_auth');
 
 let isLoggedIn = false;
 
-function setupClientEvents(client) {
-    client.on('qr', qr => {
-        qrWeb.setQR(qr);
-        qrWeb.setStatus('Esperando escaneo...');
-        qrcode.generate(qr, { small: true });
-    });
-
-    client.on('ready', () => {
-        qrWeb.setStatus('Autenticado y listo');
-        console.log('Client is ready');
-        listenMessage();
-    });
-
-    client.on('authenticated', () => {
-        isLoggedIn = true;
-        qrWeb.setStatus('Autenticado correctamente');
-        console.log('AUTHENTICATED');
-    });
-
-    client.on('auth_failure', async (msg) => {
-        qrWeb.setStatus('Fallo de autenticación');
-        console.error('AUTHENTICATION FAILURE', msg);
-        await resetSession();
-    });
-
-    client.on('disconnected', async (reason) => {
-        qrWeb.setStatus('Desconectado');
-        console.log('Client was logged out', reason);
-        await resetSession();
-    });
-};
-
-// Helper: Full session reset logic
-async function resetSession() {
-    try {
-        if (client) {
-            await client.destroy();
-            console.log('Client destroyed');
-        }
-
-        // Small delay to let file handles close
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        // Delete session files
-        const sessionPath = path.join(__dirname, '.wwebjs_auth', 'default'); // 'default' is the default clientId
-        deleteFolderRecursive(sessionPath);
-        console.log('Session files deleted');
-
-        // Create and reinitialize client
-        client = new Client({
-            authStrategy: new LocalAuth({ clientId: 'default' })
-        });
-
-        setupClientEvents(client);
-        await client.initialize();
-        console.log('Client re-initialized');
-    } catch (err) {
-        console.error('Failed to reset session:', err);
-    }
-};
-
-// Initial startup
-client = new Client({
-    authStrategy: new LocalAuth({ clientId: 'default' })
+client.on('qr', qr => {
+    qrWeb.setQR(qr);
+    qrWeb.setStatus('Esperando escaneo...');
+    console.log('QR RECEIVED', qr);
+    qrcode.generate(qr, { small: true });
 });
 
-setupClientEvents(client);
+client.on('ready', () => {
+    qrWeb.setStatus('Autenticado y listo');
+    console.log('Client is ready');
+    listenMessage();
+});
+
+client.on('authenticated', () => {
+    isLoggedIn = true;
+    qrWeb.setStatus('Autenticado correctamente');
+    console.log('AUTHENTICATED');
+});
+
+client.on('auth_failure', msg => {
+    qrWeb.setStatus('Fallo de autenticación');
+    console.error('AUTHENTICATION FAILURE', msg);
+});
+
+client.on('disconnected', async(reason) => {
+    qrWeb.setStatus('Desconectado');
+    console.log('Client was logged out', reason);
+    isLoggedIn = false;
+});
+
 client.initialize();
-
-async function logout() {
-    if (isLoggedIn) {
-        try {
-            await client.logout();
-            console.log("Logged out successfully");
-            await cleanupSessionFiles(); // Limpiar después de cerrar sesión
-        } catch (error) {
-            console.error("Error during logout:", error);
-        }
-    } else {
-        console.log("Not logged in, cannot logout");
-    }
-}
-
-// Función para limpiar los archivos de sesión
-async function cleanupSessionFiles() {
-    // Verifica si la carpeta de sesión existe y elimínala
-    try {
-        /*console.log("fs:", fs);*/
-        if ( fs.existsSync(sessionPath)) {
-             fs.rm(sessionPath, { recursive:true, force:true}, (err)=>{
-                if(err){
-                    console.err(err.message);
-                    return;
-                }
-                console.log('Files deleted successfuly')
-             });
-            console.log("Session files cleaned up.");
-            return;
-        }
-    } catch (err) {
-        if (err.code === 'ENOENT') {
-            console.log("Session path does not exist.");
-        } else {
-            console.error("Error cleaning up session files:", err);
-        }
-    }
-};
 
 const pedidos = {};
 const seleccionSabores = {};
