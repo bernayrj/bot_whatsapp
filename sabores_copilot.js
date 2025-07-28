@@ -15,10 +15,15 @@ const emitter = new EventEmitter();
 
 // Erase files on clientDisconnect event
 emitter.on('clientDisconnect', async ()=>{
-    client.destroy().then(async ()=>{ // destroy de client
-        await cleanupSessionFiles(); // clean up session files
-    })
-})
+    client.logout().then(async ()=>{ // logout the client
+        console.log('client logged out')
+        cleanupSessionFiles().then(async()=>{ // clean up session files
+            client.initialize().then(()=>{ // initialize a new client
+                console.log('client initialized'); 
+            }).catch((err)=>{console.error('failed to initalize:', err)}); // catch initialization error
+        }).catch((err)=>{console.error('failed to cleanup files:', err)}); // catch file cleanup error
+    }).catch((err)=>{console.error('failed to logout:', err)}); // catch logout error
+});
 
 // Conexión a BD MySQL
 const db = mysql.createPool({
