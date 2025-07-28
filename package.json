@@ -1,11 +1,11 @@
 {
   "name": "bot_whatsapp",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon sabores_copilot.js",
-    "dev": "nodemon sabores_copilot.js"
+    "start": "nodemon app.js",
+    "dev": "nodemon app.js"
   },
   "keywords": [],
   "author": "",
