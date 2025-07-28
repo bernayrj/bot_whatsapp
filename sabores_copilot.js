@@ -7,7 +7,6 @@ const mysql = require('mysql2');
 const qrWeb = require('./qr-server');
 const { broadcastNewOrder } = require('./ws-server');
 const cron = require('node-cron');
-const rimraf = require('rimraf');
 
 // Conexión a BD MySQL
 const db = mysql.createPool({
@@ -115,36 +114,74 @@ const sessionPath = path.join(__dirname, '.wwebjs_auth');
 
 let isLoggedIn = false;
 
-client.on('qr', qr => {
-    qrWeb.setQR(qr);
-    qrWeb.setStatus('Esperando escaneo...');
-    console.log('QR RECEIVED', qr);
-    qrcode.generate(qr, { small: true });
+// Helper: Set up client event listeners
+function setupClientEvents(client) {
+    client.on('qr', qr => {
+        qrWeb.setQR(qr);
+        qrWeb.setStatus('Esperando escaneo...');
+        console.log('QR RECEIVED');
+        qrcode.generate(qr, { small: true });
+    });
+
+    client.on('ready', () => {
+        qrWeb.setStatus('Autenticado y listo');
+        console.log('Client is ready');
+        listenMessage();
+    });
+
+    client.on('authenticated', () => {
+        qrWeb.setStatus('Autenticado correctamente');
+        console.log('AUTHENTICATED');
+    });
+
+    client.on('auth_failure', async (msg) => {
+        qrWeb.setStatus('Fallo de autenticación');
+        console.error('AUTHENTICATION FAILURE', msg);
+        await resetSession();
+    });
+
+    client.on('disconnected', async (reason) => {
+        qrWeb.setStatus('Desconectado');
+        console.log('Client was logged out', reason);
+        await resetSession();
+    });
+}
+
+// Helper: Full session reset logic
+async function resetSession() {
+    try {
+        if (client) {
+            await client.destroy();
+            console.log('Client destroyed');
+        }
+
+        // Small delay to let file handles close
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Delete session files
+        const sessionPath = path.join(__dirname, '.wwebjs_auth', 'default'); // 'default' is the default clientId
+        deleteFolderRecursive(sessionPath);
+        console.log('Session files deleted');
+
+        // Create and reinitialize client
+        client = new Client({
+            authStrategy: new LocalAuth({ clientId: 'default' })
+        });
+
+        setupClientEvents(client);
+        await client.initialize();
+        console.log('Client re-initialized');
+    } catch (err) {
+        console.error('Failed to reset session:', err);
+    }
+}
+
+// Initial startup
+client = new Client({
+    authStrategy: new LocalAuth({ clientId: 'default' })
 });
 
-client.on('ready', () => {
-    qrWeb.setStatus('Autenticado y listo');
-    console.log('Client is ready');
-    listenMessage();
-});
-
-client.on('authenticated', () => {
-    isLoggedIn = true;
-    qrWeb.setStatus('Autenticado correctamente');
-    console.log('AUTHENTICATED');
-});
-
-client.on('auth_failure', msg => {
-    qrWeb.setStatus('Fallo de autenticación');
-    console.error('AUTHENTICATION FAILURE', msg);
-});
-
-client.on('disconnected', async(reason) => {
-    qrWeb.setStatus('Desconectado');
-    console.log('Client was logged out', reason);
-    isLoggedIn = false;
-});
-
+setupClientEvents(client);
 client.initialize();
 
 const pedidos = {};
