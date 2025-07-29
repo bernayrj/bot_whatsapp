@@ -7,7 +7,6 @@ const mysql = require('mysql2');
 const qrWeb = require('./qr-server');
 const { broadcastNewOrder } = require('./ws-server');
 const cron = require('node-cron');
-const rimraf = require('rimraf');
 
 // Conexión a BD MySQL
 const db = mysql.createPool({
@@ -110,10 +109,6 @@ function deleteFolderRecursive(folderPath) {
         fs.rmdirSync(folderPath);
     }
 };
-
-const sessionPath = path.join(__dirname, '.wwebjs_auth');
-
-let isLoggedIn = false;
 
 // Helper: Set up client event listeners
 function setupClientEvents(client) {
