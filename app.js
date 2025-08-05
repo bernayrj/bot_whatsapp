@@ -558,7 +558,7 @@ const listenMessage = () => {
                         // Devolver un objeto con la cantidad por defecto en 1 y el producto
                         return {
                             cantidad: 1,
-                            producto: cantidadXProducto[1]
+                            producto: cantidadXProducto[0]
                         }
                     }
                 }); 
@@ -618,9 +618,7 @@ const listenMessage = () => {
                     );
                     return;
                 }
-                })
-
-                
+                });
 
                 // --- Lógica para recibir variante de hamburguesa ---
                 if (seleccionSabores[from] && seleccionSabores[from].esperandoVariante) {
