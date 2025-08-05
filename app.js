@@ -547,19 +547,18 @@ const listenMessage = () => {
 
                 // Separar texto por comas
                 const productos = texto.split(",").map((p) => {     // Separar texto por comas y ejecutar una función a cada elemento resultante del array devolviendo un nuevo array 
-                    p.trim(); // Eliminar espacios en blanco antes y después del elemento
-                    const cantidadXProducto = p.split(" "); // Separar elementos por espacio (en este caso, número y texto)
-                    if(cantidadXProducto.length == 2 && typeof cantidadXProducto[0] == Number && cantidadXProducto[0] < 100){ // Validar que haya 2 elementos y el 1ero sea un número menor a 100
+                    const cantidadXProducto = p.trim().split(" "); // Separar elementos por espacio (en este caso, número y texto)
+                    if(cantidadXProducto.length == 2 && cantidadXProducto[0] < 100){ // Validar que haya 2 elementos y el 1ero sea un número menor a 100
                         // Devolver un objeto con la cantidad y el producto
                         return{
-                            cantidad: cantidadXProducto[0].trim(),
-                            producto: cantidadXProducto[1].trim()
+                            cantidad: cantidadXProducto[0],
+                            producto: cantidadXProducto[1]
                         }
                     } else {
                         // Devolver un objeto con la cantidad por defecto en 1 y el producto
                         return {
                             cantidad: 1,
-                            producto: cantidadXProducto[1].trim()
+                            producto: cantidadXProducto[1]
                         }
                     }
                 }); 
