@@ -545,7 +545,27 @@ const listenMessage = () => {
             default:
                 // --- SOLO lógica por CÓDIGOS ---
 
-                const matchCodigoArepa = arepasCod[texto.toUpperCase()];
+                // Separar texto en comas
+                const productos = texto.split(",").map((p) => {     // Separar texto por comas y ejecutar una función a cada elemento resultante del array devolviendo un nuevo array 
+                    p.trim(); // Eliminar espacios en blanco antes y después del elemento
+                    const cantidadXProducto = p.split(" "); // Separa elemento por espacio (en este caso, número del texto)
+                    if(cantidadXProducto.length == 2 && typeof cantidadXProducto[0] == Number && cantidadXProducto[0] < 100){ // Validar que haya 2 elementos y el 1ero sea un número menor a 100
+                        // Devolver un objeto con la cantidad y el producto
+                        return{
+                            cantidad: cantidadXProducto[0],
+                            producto: cantidadXProducto[1]
+                        }
+                    } else {
+                        // Devolver un objeto con la cantidad por defecto en 1 y el producto
+                        return {
+                            cantidad: 1,
+                            producto: cantidadXProducto[0]
+                        }
+                    }
+                }); 
+
+                productos.forEach(p => {
+                    const matchCodigoArepa = arepasCod[p.producto.toUpperCase()];
                 if (matchCodigoArepa) {
                     // Si requiere sabores
                     if (matchCodigoArepa.nombre.includes('2 sabores')) {
@@ -553,8 +573,8 @@ const listenMessage = () => {
                             producto: {
                                 item: matchCodigoArepa.nombre,
                                 precio: matchCodigoArepa.precio,
-                                cantidad: 1,
-                                subtotal: 1 * matchCodigoArepa.precio
+                                cantidad: p.cantidad,
+                                subtotal: p.cantidad * matchCodigoArepa.precio
                             },
                             esperando: true,
                             tipo: matchCodigoArepa.nombre.includes('mariscos') ? 'mariscos' : 'normal',
@@ -571,8 +591,8 @@ const listenMessage = () => {
                         const producto = {
                             item: matchCodigoArepa.nombre,
                             precio: matchCodigoArepa.precio,
-                            cantidad: 1,
-                            subtotal: 1 * matchCodigoArepa.precio
+                            cantidad: p.cantidad,
+                            subtotal: p.cantidad * matchCodigoArepa.precio
                         };
                         pedidos[from] = pedidos[from] || [];
                         pedidos[from].push(producto);
@@ -583,13 +603,13 @@ const listenMessage = () => {
                 }
 
                 // --- Lógica para hamburguesas por código ---
-                const matchCodigoBurger = hamburguesasCod[texto.toUpperCase()];
+                const matchCodigoBurger = hamburguesasCod[p.producto.toUpperCase()];
                 if (matchCodigoBurger) {
                     seleccionSabores[from] = {
                         producto: {
                             item: matchCodigoBurger.nombre,
-                            codigo: texto.toUpperCase(),
-                            cantidad: 1,
+                            codigo: p.producto.toUpperCase(),
+                            cantidad: p.cantidad,
                         },
                         esperandoVariante: true
                     };
@@ -599,6 +619,9 @@ const listenMessage = () => {
                     );
                     return;
                 }
+                })
+
+                
 
                 // --- Lógica para recibir variante de hamburguesa ---
                 if (seleccionSabores[from] && seleccionSabores[from].esperandoVariante) {
