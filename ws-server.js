@@ -7,6 +7,10 @@ wss.on('connection', (ws) => {
   console.log('Dashboard connected via WebSocket');
 });
 
+wss.on("headers", (headers, req) => {
+	headers.push("Access-Control-Allow-Origin: *");
+} );
+
 // Utility to broadcast to all clients
 function broadcastNewOrder() {
   wss.clients.forEach((client) => {
