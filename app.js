@@ -59,7 +59,7 @@ function actualizarTasa() {
 actualizarTasa();
 
 // Programar para que se ejecute todos los días a las 12:00 am
-cron.schedule('0 0 * * *', () => {
+cron.schedule('20 0 * * *', () => {
     actualizarTasa();
 });
 
