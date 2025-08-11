@@ -546,26 +546,7 @@ const listenMessage = () => {
             default:
                 // --- SOLO lógica por CÓDIGOS ---
 
-                // Separar texto por comas
-                const productos = texto.split(",").map((p) => {     // Separar texto por comas y ejecutar una función a cada elemento resultante del array devolviendo un nuevo array 
-                    const cantidadXProducto = p.trim().split(" "); // Separar elementos por espacio (en este caso, número y texto)
-                    if(cantidadXProducto.length == 2 && cantidadXProducto[0] < 100){ // Validar que haya 2 elementos y el 1ero sea un número menor a 100
-                        // Devolver un objeto con la cantidad y el producto
-                        return{
-                            cantidad: cantidadXProducto[0],
-                            producto: cantidadXProducto[1]
-                        }
-                    } else {
-                        // Devolver un objeto con la cantidad por defecto en 1 y el producto
-                        return {
-                            cantidad: 1,
-                            producto: cantidadXProducto[0]
-                        }
-                    }
-                }); 
-
-                productos.forEach(p => {
-                    const matchCodigoArepa = arepasCod[p.producto.toUpperCase()];
+                const matchCodigoArepa = arepasCod[texto.toUpperCase()];
                 if (matchCodigoArepa) {
                     // Si requiere sabores
                     if (matchCodigoArepa.nombre.includes('2 sabores')) {
@@ -573,29 +554,26 @@ const listenMessage = () => {
                             producto: {
                                 item: matchCodigoArepa.nombre,
                                 precio: matchCodigoArepa.precio,
-                                cantidad: p.cantidad,
-                                subtotal: p.cantidad * matchCodigoArepa.precio
+                                cantidad: 1,
+                                subtotal: 1 * matchCodigoArepa.precio
                             },
                             esperando: true,
                             tipo: matchCodigoArepa.nombre.includes('mariscos') ? 'mariscos' : 'normal',
                             cantidad: 2
                         };
-                        cargarSaboresDesdeBD(()=>{
-                            if (matchCodigoArepa.nombre.includes('mariscos')) {
+                        if (matchCodigoArepa.nombre.includes('mariscos')) {
                             sendMessage(from, `Indica 1 código de cada menú, separados por coma.\nSabores normales:\n${menuSabores}\nSabores mar:\n${menuSaboresMar}`);
                         } else {
                             sendMessage(from, `*Sabores:*\n${menuSabores}\n\n_*Responde con los códigos exactos de los sabores separados por coma. (Ejemplo: SA1, SA7 - para pollo, tocineta )*_`);
                         }
                         return;
-                        });                        
-                        
                     } else {
                         // Arepa sin sabores
                         const producto = {
                             item: matchCodigoArepa.nombre,
                             precio: matchCodigoArepa.precio,
-                            cantidad: p.cantidad,
-                            subtotal: p.cantidad * matchCodigoArepa.precio
+                            cantidad: 1,
+                            subtotal: 1 * matchCodigoArepa.precio
                         };
                         pedidos[from] = pedidos[from] || [];
                         pedidos[from].push(producto);
@@ -603,17 +581,16 @@ const listenMessage = () => {
                         sendMessage(from, `Agregado: ${producto.cantidad} x ${producto.item} ($${producto.precio} c/u) = $${producto.subtotal}\n\nEscribe _*VER*_ para ver el total de tu pedido o sigue agregando productos.`);
                         return;
                     }
-                    return;
                 }
 
                 // --- Lógica para hamburguesas por código ---
-                const matchCodigoBurger = hamburguesasCod[p.producto.toUpperCase()];
+                const matchCodigoBurger = hamburguesasCod[texto.toUpperCase()];
                 if (matchCodigoBurger) {
                     seleccionSabores[from] = {
                         producto: {
                             item: matchCodigoBurger.nombre,
-                            codigo: p.producto.toUpperCase(),
-                            cantidad: p.cantidad,
+                            codigo: texto.toUpperCase(),
+                            cantidad: 1,
                         },
                         esperandoVariante: true
                     };
@@ -623,8 +600,6 @@ const listenMessage = () => {
                     );
                     return;
                 }
-                return;
-                });
 
                 // --- Lógica para recibir variante de hamburguesa ---
                 if (seleccionSabores[from] && seleccionSabores[from].esperandoVariante) {
