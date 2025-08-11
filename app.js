@@ -64,7 +64,7 @@ cron.schedule('20 0 * * *', () => {
 });
 
 // Traer los sabores disponibles de BD para las arepas
-function cargarSaboresDesdeBD() {
+function cargarSaboresDesdeBD(callback) {
     db.query('CALL get_sabores()', (err, results) => {
         if (err) {
             console.error('Error al obtener sabores:', err);
@@ -79,6 +79,7 @@ function cargarSaboresDesdeBD() {
             } else if (row.categoria === 'mar') {
                 catalogoSaboresMarCod[row.codigo] = row.sabor;
             }
+
         });
 
         menuSabores = Object.entries(catalogoSaboresCod)
@@ -88,7 +89,9 @@ function cargarSaboresDesdeBD() {
             .map(([cod, sabor]) => `- *${cod}*: ${sabor}`)
             .join('\n');
         console.log('Actualizando sabores (rellenos), desde BD...');
+        callback();
     });
+    
 }
 
 
@@ -577,13 +580,15 @@ const listenMessage = () => {
                             tipo: matchCodigoArepa.nombre.includes('mariscos') ? 'mariscos' : 'normal',
                             cantidad: 2
                         };
-                        cargarSaboresDesdeBD();
-                        if (matchCodigoArepa.nombre.includes('mariscos')) {
+                        cargarSaboresDesdeBD(()=>{
+                            if (matchCodigoArepa.nombre.includes('mariscos')) {
                             sendMessage(from, `Indica 1 código de cada menú, separados por coma.\nSabores normales:\n${menuSabores}\nSabores mar:\n${menuSaboresMar}`);
                         } else {
                             sendMessage(from, `*Sabores:*\n${menuSabores}\n\n_*Responde con los códigos exactos de los sabores separados por coma. (Ejemplo: SA1, SA7 - para pollo, tocineta )*_`);
                         }
                         return;
+                        });                        
+                        
                     } else {
                         // Arepa sin sabores
                         const producto = {
@@ -598,6 +603,7 @@ const listenMessage = () => {
                         sendMessage(from, `Agregado: ${producto.cantidad} x ${producto.item} ($${producto.precio} c/u) = $${producto.subtotal}\n\nEscribe _*VER*_ para ver el total de tu pedido o sigue agregando productos.`);
                         return;
                     }
+                    return;
                 }
 
                 // --- Lógica para hamburguesas por código ---
@@ -617,6 +623,7 @@ const listenMessage = () => {
                     );
                     return;
                 }
+                return;
                 });
 
                 // --- Lógica para recibir variante de hamburguesa ---
