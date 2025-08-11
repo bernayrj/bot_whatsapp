@@ -91,7 +91,6 @@ function cargarSaboresDesdeBD() {
     });
 }
 
-cargarSaboresDesdeBD();
 
 let client;
 
@@ -407,7 +406,6 @@ const listenMessage = () => {
                 'arepazo.png', 
                 getMenuArepazoCod() + 
                 '\n\n_*Responde con la cantidad y el código del producto que quieres (Ejemplo: 2 MA1 - para arepa mixta 2 sabores).*_');
-                cargarSaboresDesdeBD();
                 break;
             case 'hamburguesas':
             case 'burger':
@@ -579,6 +577,7 @@ const listenMessage = () => {
                             tipo: matchCodigoArepa.nombre.includes('mariscos') ? 'mariscos' : 'normal',
                             cantidad: 2
                         };
+                        cargarSaboresDesdeBD();
                         if (matchCodigoArepa.nombre.includes('mariscos')) {
                             sendMessage(from, `Indica 1 código de cada menú, separados por coma.\nSabores normales:\n${menuSabores}\nSabores mar:\n${menuSaboresMar}`);
                         } else {
