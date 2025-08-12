@@ -546,7 +546,16 @@ const listenMessage = () => {
             default:
                 // --- SOLO lógica por CÓDIGOS ---
 
-                const matchCodigoArepa = arepasCod[texto.toUpperCase()];
+                const match = texto.match(/^(\d+)\s+(.+)$/);
+                let cantidad = 1;
+                let producto = null;
+                let nombreProducto = texto.trim().toLowerCase();
+                if (match) {
+                    cantidad = parseInt(match[1]);
+                    nombreProducto = match[2].trim().toLowerCase();
+                }
+
+                const matchCodigoArepa = arepasCod[nombreProducto.toUpperCase()];
                 if (matchCodigoArepa) {
                     // Si requiere sabores
                     if (matchCodigoArepa.nombre.includes('2 sabores')) {
@@ -554,8 +563,8 @@ const listenMessage = () => {
                             producto: {
                                 item: matchCodigoArepa.nombre,
                                 precio: matchCodigoArepa.precio,
-                                cantidad: 1,
-                                subtotal: 1 * matchCodigoArepa.precio
+                                cantidad: cantidad,
+                                subtotal: cantidad * matchCodigoArepa.precio
                             },
                             esperando: true,
                             tipo: matchCodigoArepa.nombre.includes('mariscos') ? 'mariscos' : 'normal',
@@ -574,8 +583,8 @@ const listenMessage = () => {
                         const producto = {
                             item: matchCodigoArepa.nombre,
                             precio: matchCodigoArepa.precio,
-                            cantidad: 1,
-                            subtotal: 1 * matchCodigoArepa.precio
+                            cantidad: cantidad,
+                            subtotal: cantidad * matchCodigoArepa.precio
                         };
                         pedidos[from] = pedidos[from] || [];
                         pedidos[from].push(producto);
@@ -586,13 +595,13 @@ const listenMessage = () => {
                 }
 
                 // --- Lógica para hamburguesas por código ---
-                const matchCodigoBurger = hamburguesasCod[texto.toUpperCase()];
+                const matchCodigoBurger = hamburguesasCod[nombreProducto.toUpperCase()];
                 if (matchCodigoBurger) {
                     seleccionSabores[from] = {
                         producto: {
                             item: matchCodigoBurger.nombre,
-                            codigo: texto.toUpperCase(),
-                            cantidad: 1,
+                            codigo: nombreProducto.toUpperCase(),
+                            cantidad: cantidad,
                         },
                         esperandoVariante: true
                     };
