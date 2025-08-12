@@ -561,11 +561,13 @@ const listenMessage = () => {
                             tipo: matchCodigoArepa.nombre.includes('mariscos') ? 'mariscos' : 'normal',
                             cantidad: 2
                         };
-                        if (matchCodigoArepa.nombre.includes('mariscos')) {
+                        cargarSaboresDesdeBD(()=>{
+                            if (matchCodigoArepa.nombre.includes('mariscos')) {
                             sendMessage(from, `Indica 1 código de cada menú, separados por coma.\nSabores normales:\n${menuSabores}\nSabores mar:\n${menuSaboresMar}`);
-                        } else {
-                            sendMessage(from, `*Sabores:*\n${menuSabores}\n\n_*Responde con los códigos exactos de los sabores separados por coma. (Ejemplo: SA1, SA7 - para pollo, tocineta )*_`);
-                        }
+                            } else {
+                                sendMessage(from, `*Sabores:*\n${menuSabores}\n\n_*Responde con los códigos exactos de los sabores separados por coma. (Ejemplo: SA1, SA7 - para pollo, tocineta )*_`);
+                            }
+                        })
                         return;
                     } else {
                         // Arepa sin sabores
