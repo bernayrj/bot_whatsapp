@@ -35,8 +35,12 @@ console.log('INICIANDO CHATBOT LOS PRIMOS...');
 // Catálogos de sabores por código
 let catalogoSaboresCod = {};
 let catalogoSaboresMarCod = {};
+let catalogoSaboresRefresco = {};
+let catalogoSaboresLipton = {};
 let menuSabores = '';
 let menuSaboresMar = '';
+let menuSaboresRefresco = '';
+let menuSaboresLipton = '';
 
 // Actualizar tasa de cambio
 
@@ -72,12 +76,18 @@ function cargarSaboresDesdeBD(callback) {
         }
         catalogoSaboresCod = {};
         catalogoSaboresMarCod = {};
+        catalogoSaboresRefresco = {};
+        catalogoSaboresLipton = {};
 
         results[0].forEach(row => {
             if (row.categoria === 'normal') {
                 catalogoSaboresCod[row.codigo] = row.sabor;
             } else if (row.categoria === 'mar') {
                 catalogoSaboresMarCod[row.codigo] = row.sabor;
+            } else if (row.categoria === 'refresco') {
+                catalogoSaboresRefresco[row.codigo] = row.sabor;
+            } else if (row.categoria === 'lipton') {
+                catalogoSaboresLipton[row.codigo] = row.sabor;
             }
 
         });
@@ -88,7 +98,13 @@ function cargarSaboresDesdeBD(callback) {
         menuSaboresMar = Object.entries(catalogoSaboresMarCod)
             .map(([cod, sabor]) => `- *${cod}*: ${sabor}`)
             .join('\n');
-        console.log('Actualizando sabores (rellenos), desde BD...');
+        menuSaboresRefresco = Object.entries(catalogoSaboresRefresco)
+            .map(([cod, sabor]) => `- *${cod}*: ${sabor}`)
+            .join('\n');
+        menuSaboresLipton = Object.entries(catalogoSaboresLipton)
+            .map(([cod, sabor]) => `- *${cod}*: ${sabor}`)
+            .join('\n');
+        console.log('Actualizando sabores desde BD...');
         callback();
     });
     
@@ -114,6 +130,7 @@ function deleteFolderRecursive(folderPath) {
 
 // Helper: Set up client event listeners
 function setupClientEvents(client) {
+    console.log('setting up client events');
     client.on('qr', qr => {
         qrWeb.setQR(qr);
         qrWeb.setStatus('Esperando escaneo...');
@@ -360,6 +377,24 @@ const listenMessage = () => {
                     sendMessage(from, `Debes indicar 1 código de cada menú, separados por coma.\nEjemplo: SA1, SM3\nSabores normales:\n${menuSabores}\nSabores mar:\n${menuSaboresMar}`);
                     return;
                 }
+            } else if (tipo === 'refresco') {
+                validos = codigos.length === cantidad && codigos.every(c => catalogoSaboresRefresco[c]);
+                if (validos) {
+                    sabores = codigos.map(c => catalogoSaboresRefresco[c]);
+                }
+                if (!validos) {
+                    sendMessage(from, `Debes indicar el código del refresco. Opciones:\n${menuSaboresRefresco}`);
+                    return;
+                }
+            } else if (tipo === 'lipton') {
+                validos = codigos.length === cantidad && codigos.every(c => catalogoSaboresLipton[c]);
+                if (validos) {
+                    sabores = codigos.map(c => catalogoSaboresLipton[c]);
+                }
+                if (!validos) {
+                    sendMessage(from, `Debes indicar el código del té lipton. Opciones:\n${menuSaboresLipton}`);
+                    return;
+                }
             } else {
                 validos = codigos.length === cantidad && codigos.every(c => catalogoSaboresCod[c]);
                 if (validos) {
@@ -555,6 +590,8 @@ const listenMessage = () => {
                     nombreProducto = match[2].trim().toLowerCase();
                 }
 
+                // Lógica para arepas por código
+
                 const matchCodigoArepa = arepasCod[nombreProducto.toUpperCase()];
                 if (matchCodigoArepa) {
                     // Si requiere sabores
@@ -697,7 +734,26 @@ const listenMessage = () => {
                 // Bebidas
                 const matchCodigoBebida = bebidasCod[texto.toUpperCase()];
                 if (matchCodigoBebida) {
-                    const producto = {
+                    seleccionSabores[from] = {
+                        producto: {
+                            item: matchCodigoBebida.nombre,
+                            precio: matchCodigoBebida.precio,
+                            cantidad: cantidad,
+                            subtotal: cantidad * matchCodigoBebida.precio
+                        },
+                        esperando: true,
+                        tipo: matchCodigoBebida.nombre.includes('Refresco') ? 'refresco' : 'lipton',
+                        cantidad: cantidad
+                    };
+                    cargarSaboresDesdeBD(()=>{
+                        if (matchCodigoBebida.nombre.includes('Refresco')) {
+                            sendMessage(from, `Sabores:\n${menuSaboresRefresco}\n\n_*Responde con el código exacto del sabor. (Ejemplo: RF1 - para Coca-Cola )*_`);
+                        } else {
+                            sendMessage(from, `*Sabores:*\n${menuSaboresLipton}\n\n_*Responde con el código exacto del sabor. (Ejemplo: LT1 - para Té Verde )*_`);
+                        }
+                    })
+                    return;
+                    /* const producto = {
                         item: matchCodigoBebida.nombre,
                         precio: matchCodigoBebida.precio,
                         cantidad: 1,
@@ -707,7 +763,7 @@ const listenMessage = () => {
                     pedidos[from].push(producto);
                     iniciarTimeoutPedido(from);
                     sendMessage(from, `Agregado: ${producto.cantidad} x ${producto.item} ($${producto.precio} c/u) = $${producto.subtotal}\n\nEscribe _*VER*_ para ver el total de tu pedido o sigue agregando productos.`);
-                    return;
+                    return; */
                 }
 
                 // --- Lógica para zona de delivery por código ---
