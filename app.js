@@ -367,11 +367,43 @@ const listenMessage = () => {
             let sabores = [];
 
             if (tipo === 'mariscos') {
-                validos = codigos.length === 2 &&
-                    catalogoSaboresCod[codigos[0]] &&
-                    catalogoSaboresMarCod[codigos[1]];
+                console.log(codigos.length, catalogoSaboresCod[codigos[0]], catalogoSaboresCod[codigos[1]], catalogoSaboresMarCod[codigos[0]], catalogoSaboresMarCod[codigos[1]])
+                validos = codigos.length <= 2 &&
+                    codigos.length > 0 &&
+                    (
+                    (
+                        catalogoSaboresCod[codigos[0]] ||
+                        catalogoSaboresCod[codigos[1]]
+                    ) ||
+                    (
+                        catalogoSaboresMarCod[codigos[0]] ||
+                        catalogoSaboresMarCod[codigos[1]]
+                    ) 
+                )   
                 if (validos) {
-                    sabores = [catalogoSaboresCod[codigos[0]], catalogoSaboresMarCod[codigos[1]]];
+                    console.log('validos')
+                    const saboresfn = ()=>{
+                        let saboresArray = [];
+                        if(catalogoSaboresCod[codigos[0]]) {
+                            console.log('posicion 0:', catalogoSaboresCod[codigos[0]])
+                            saboresArray.push(catalogoSaboresCod[codigos[0]])
+                        } else if(catalogoSaboresMarCod[codigos[0]]){
+                            console.log('posicion 0:', catalogoSaboresMarCod[codigos[0]])
+                            saboresArray.push(catalogoSaboresMarCod[codigos[0]])
+                        }
+                        if(codigos[1]){
+                            if(catalogoSaboresCod[codigos[1]]) {
+                                console.log('posicion 0:', catalogoSaboresCod[codigos[1]])
+                                saboresArray.push(catalogoSaboresCod[codigos[1]])
+                        } else if(catalogoSaboresMarCod[codigos[1]]){
+                            console.log('posicion 0:', catalogoSaboresMarCod[codigos[1]])
+                                saboresArray.push(catalogoSaboresMarCod[codigos[1]])
+                        }
+                        }
+                        return saboresArray;
+                    }
+
+                    sabores = saboresfn();
                 }
                 if (!validos) {
                     sendMessage(from, `Debes indicar 1 código de cada menú, separados por coma.\nEjemplo: SA1, SM3\nSabores normales:\n${menuSabores}\nSabores mar:\n${menuSaboresMar}`);
@@ -396,7 +428,7 @@ const listenMessage = () => {
                     return;
                 }
             } else {
-                validos = codigos.length === cantidad && codigos.every(c => catalogoSaboresCod[c]);
+                validos = codigos.length <= cantidad && codigos.length > 0 && codigos.every(c => catalogoSaboresCod[c]);
                 if (validos) {
                     sabores = codigos.map(c => catalogoSaboresCod[c]);
                 }
@@ -674,13 +706,13 @@ const listenMessage = () => {
                 }
 
                 // Nuggets
-                const matchCodigoNugget = nuggetsCod[texto.toUpperCase()];
+                const matchCodigoNugget = nuggetsCod[nombreProducto.toUpperCase()];
                 if (matchCodigoNugget) {
                     seleccionSabores[from] = {
                         producto: {
                             item: matchCodigoNugget.nombre,
-                            codigo: texto.toUpperCase(),
-                            cantidad: 1,
+                            codigo: nombreProducto.toUpperCase(),
+                            cantidad: cantidad,
                         },
                         esperandoVarianteNugget: true
                     };
@@ -732,9 +764,10 @@ const listenMessage = () => {
                 }
 
                 // Bebidas
-                const matchCodigoBebida = bebidasCod[texto.toUpperCase()];
+                const matchCodigoBebida = bebidasCod[nombreProducto.toUpperCase()];
                 if (matchCodigoBebida) {
-                    seleccionSabores[from] = {
+                    if (matchCodigoBebida.nombre.includes('Refresco') || matchCodigoBebida.nombre.includes('Lipton')) {
+                        seleccionSabores[from] = {
                         producto: {
                             item: matchCodigoBebida.nombre,
                             precio: matchCodigoBebida.precio,
@@ -743,28 +776,30 @@ const listenMessage = () => {
                         },
                         esperando: true,
                         tipo: matchCodigoBebida.nombre.includes('Refresco') ? 'refresco' : 'lipton',
-                        cantidad: cantidad
+                        cantidad: 1
                     };
                     cargarSaboresDesdeBD(()=>{
                         if (matchCodigoBebida.nombre.includes('Refresco')) {
                             sendMessage(from, `Sabores:\n${menuSaboresRefresco}\n\n_*Responde con el código exacto del sabor. (Ejemplo: RF1 - para Coca-Cola )*_`);
-                        } else {
-                            sendMessage(from, `*Sabores:*\n${menuSaboresLipton}\n\n_*Responde con el código exacto del sabor. (Ejemplo: LT1 - para Té Verde )*_`);
+                        } else if (matchCodigoBebida.nombre.includes('Lipton')) {
+                           sendMessage(from, `*Sabores:*\n${menuSaboresLipton}\n\n_*Responde con el código exacto del sabor. (Ejemplo: LT1 - para Té Verde )*_`);
                         }
-                    })
+                    });
                     return;
-                    /* const producto = {
-                        item: matchCodigoBebida.nombre,
-                        precio: matchCodigoBebida.precio,
-                        cantidad: 1,
-                        subtotal: 1 * matchCodigoBebida.precio
-                    };
+                } else {
+                    const producto = {
+                            item: matchCodigoBebida.nombre,
+                            precio: matchCodigoBebida.precio,
+                            cantidad: cantidad,
+                            subtotal: cantidad * matchCodigoBebida.precio
+                        };
                     pedidos[from] = pedidos[from] || [];
                     pedidos[from].push(producto);
                     iniciarTimeoutPedido(from);
                     sendMessage(from, `Agregado: ${producto.cantidad} x ${producto.item} ($${producto.precio} c/u) = $${producto.subtotal}\n\nEscribe _*VER*_ para ver el total de tu pedido o sigue agregando productos.`);
-                    return; */
+                    return;
                 }
+                    }
 
                 // --- Lógica para zona de delivery por código ---
                 const matchCodigoDelivery = zonaDeliveryCod[texto.toUpperCase()];
