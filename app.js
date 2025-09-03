@@ -202,6 +202,7 @@ client.initialize();
 const pedidos = {};
 const seleccionSabores = {};
 const pedidoTimeouts = {};
+const datosRecepcion = {};
 
 // Catálogos SOLO por código
 
@@ -340,6 +341,58 @@ const listenMessage = () => {
     client.on('message', (msg) => {
         const { from, body } = msg;
         const texto = body.toLowerCase().trim();
+
+        // --- Captura de datos adicionales ---
+        if (datosRecepcion[from]) {
+            // Validar nombre (solo letras y espacios)
+            if (!datosRecepcion[from].nombre) {
+                if (!/^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]+$/.test(body.trim())) {
+                    sendMessage(from, '⚠️ El nombre solo debe contener letras. Inténtalo de nuevo:');
+                    return;
+                }
+                datosRecepcion[from].nombre = body.trim();
+                sendMessage(from, 'Indícanos tu cédula (solo números, máximo 8 dígitos):');
+                return;
+            }
+            // Validar cédula (solo números, máximo 8 dígitos)
+            if (!datosRecepcion[from].cedula) {
+                if (!/^\d{1,8}$/.test(body.trim())) {
+                    sendMessage(from, '⚠️ La cédula solo debe contener números y máximo 8 dígitos. Inténtalo de nuevo:');
+                    return;
+                }
+                datosRecepcion[from].cedula = body.trim();
+                sendMessage(from, 'Indícanos el teléfono de quien recibe el pedido (solo números):');
+                return;
+            }
+            // Validar teléfono (solo números, máximo 11 dígitos)
+            if (!datosRecepcion[from].telefono) {
+                if (!/^\d{11}$/.test(body.trim())) {
+                    sendMessage(from, '⚠️ El teléfono solo debe contener números y 11 dígitos. Inténtalo de nuevo:');
+                    return;
+                }
+                datosRecepcion[from].telefono = body.trim();
+
+                // Agregar datos al resumen y continuar flujo
+                if (global.ultimoPedido && global.ultimoPedido[from]) {
+                    const { fecha, resumen, total } = global.ultimoPedido[from];
+                    const datos = datosRecepcion[from];
+                    const resumenConDatos =
+                       /*  `🧾 *Tu pedido:*\n` + */
+                        resumen +
+                        `\n\n*Datos de Facturacion:*\n` +
+                        `- Nombre: ${datos.nombre}\n` +
+                        `- Cédula: ${datos.cedula}\n` +
+                        `- Teléfono: ${datos.telefono}\n`;
+
+                    global.ultimoPedido[from].resumen = resumenConDatos;
+
+                    sendMessage(from, resumenConDatos);
+                    sendMessage(from, '¿Cómo deseas pagar?\n\n💵 Efectivo\n 📲Pago Movil\n💳 Punto\n\nResponde con _*EFECTIVO*_, _*PAGO MOVIL*_ o _*PUNTO*_');
+                }
+                delete datosRecepcion[from];
+                return;
+            }
+        }
 
         // === BLOQUE PARA RECIBIR Y GUARDAR IMAGEN DE PAGO MOVIL ===
         if (msg.hasMedia) {
@@ -586,8 +639,9 @@ const listenMessage = () => {
                         if (!global.ultimoPedido) global.ultimoPedido = {};
                         global.ultimoPedido[from] = { fecha, resumen, total };
 
-                        sendMessage(from, resumen);
-                        sendMessage(from, '¿Cómo deseas pagar?\n\n💵 Efectivo\n 📲Pago Movil\n\nResponde con _*EFECTIVO*_ o _*PAGO MOVIL*_');
+                        // INICIO DE CAPTURA DE DATOS
+                        datosRecepcion[from] = {};
+                        sendMessage(from, 'Indícanos tu nombre:');
                         delete pedidos[from];
                     } else {
                         sendMessage(from, 'No conocemos tu zona de entrega. Escribela para agregarla\n\n' + menuDelivery);
@@ -645,6 +699,36 @@ const listenMessage = () => {
                     console.log('No hay datos de pedido para guardar.');
                 }
                 break;
+            case 'punto':
+                if (pedidoTimeouts[from]) {
+                    clearTimeout(pedidoTimeouts[from]);
+                    delete pedidoTimeouts[from];
+                }
+                if (typeof ultimoPedido !== 'undefined' && ultimoPedido[from]) {
+                    const { fecha, resumen, total } = ultimoPedido[from];
+                    const nombreCliente = msg._data?.notifyName || 'Desconocido';
+                    db.query('CALL add_customer(?, ?)', [from, nombreCliente], (errCliente, resCliente) => {
+                        if (errCliente) {
+                            console.log('Error al guardar cliente:', errCliente);
+                            return;
+                        }
+                        let ordenNum = null;
+                        db.query('CALL add_order (?, ?, ?, ?, ?, ?)', [fecha, from, resumen, total, 'Punto de venta', 'no aplica'], (err, results) => {
+                            if (err) {
+                                console.log('Error en consulta:', err);
+                                sendMessage(from, 'Ha ocurrido un error, intenta de nuevo');
+                            } else {
+                                ordenNum = results[0][0]?.orden || null;
+                                broadcastNewOrder();
+                                sendMessage(from, 'Perfecto, puedes pagar en punto de venta al momento de la entrega. En breve nuestro equipo se comunicara contigo para coordinar los detalles de entrega.\n\n'+'Tu orden es: ' + ordenNum);
+                            }
+                        });
+                    });
+                    delete ultimoPedido[from];
+                } else {
+                    console.log('No hay datos de pedido para guardar.');
+                }
+                break;    
             default:
                 // --- SOLO lógica por CÓDIGOS ---
 
