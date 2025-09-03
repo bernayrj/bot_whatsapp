@@ -207,12 +207,29 @@ const pedidoTimeouts = {};
 
 const menuDelivery =
 `🛵 *DELIVERY* 🛵
-- ZD1: Lechería $1.5
-- ZD2: Barcelona $3
-- ZD3: Puerto la cruz $4`;
+- ZD1: Casco central $1
+- ZD2: Lecheria $2
+- ZD3: Doral beach $2
+- ZD4: Pueblo viejo $2
+- ZD5: Puerto morro: $2
+- ZD6: Caribean mall $2
+- ZD7: Venecia $2
+- ZD8: Costanera $2
+- ZD9: Las garzas $2
+- ZD10: Crucero $2
+- ZD11: Colinas de neveri $2
+- ZD12: Vistamar $2
+- ZD13: Cerro el morro $2
+- ZD14: Intercomunal $3
+- ZD15: Barcelona $3
+- ZD16: Puerto la cruz $3
+- ZD17: Guanta $3
+- ZD18: El rincon $5
+- ZD19: San diego $5
+- ZD20: Areopuerto $5`;
 
 const hamburguesasCod = {
-    'HB1': { nombre: 'Smash burger', descripcion: 'Pan de batata, carne smash, queso, ketchup y mayonesa', precios: { S: 3, P: 4, C: 5 } },
+    'HB1': { nombre: 'Smash burger', descripcion: 'Pan de batata, carne smash, queso, ketchup y mayonesa', precios: { S: 3, P: 4, C: 5.5 } },
     'HB2': { nombre: 'Doble Smash Burger', descripcion: 'Doble carne', precios: { S: 4.5, P: 5.5, C: 7 } },
     'HB3': { nombre: 'Triple Smash Burger', descripcion: 'Triple carne', precios: { S: 5.5, P: 6.5, C: 8 } },
     'HB4': { nombre: 'Clásica', descripcion: 'Pan de batata, carne smash, tocineta, queso, ketchup y mayonesa', precios: { S: 4.5, P: 5.5, C: 7 } },
@@ -225,9 +242,9 @@ const hamburguesasCod = {
 };
 
 const nuggetsCod = {
-    'NG1': { nombre: 'Nuggets de 4 piezas', precios: { S: 1.5, P: 2.4, C: 4 } },
-    'NG2': { nombre: 'Nuggets de 6 piezas', precios: { S: 1.5, P: 2.4, C: 4 } },
-    'NG3': { nombre: 'Nuggets de 10 piezas', precios: { S: 1.5, P: 2.4, C: 4 } }
+    'NG1': { nombre: 'Nuggets de 4 piezas', precios: { S: 1.5, P: 2.5, C: 4 } },
+    'NG2': { nombre: 'Nuggets de 6 piezas', precios: { S: 2, P: 3, C: 4.5 } },
+    'NG3': { nombre: 'Nuggets de 10 piezas', precios: { S: 4.5, P: 5.5, C: 7 } }
 };
 
 const papasCod = {
@@ -253,15 +270,33 @@ const variantesBurger = {
 
 // Códigos para productos Arepas
 const arepasCod = {
-    'MA1': { nombre: 'Arepa mixta 2 sabores', precio: 3 },
-    'MA2': { nombre: 'Arepa mixta 2 sabores con mariscos', precio: 3.5 }
+    'MA1': { nombre: 'Arepa mixta 2 sabores', precio: 4 },
+    'MA2': { nombre: 'Arepa mixta 2 sabores con mariscos', precio: 4.5 },
+    'MA3': { nombre:'Viuda', precio: 1 }
 };
 
 // Códigos para zonas de delivery
 const zonaDeliveryCod = {
-    'ZD1': { nombre: 'Lechería', precio: 1.5 },
-    'ZD2': { nombre: 'Barcelona', precio: 3 },
-    'ZD3': { nombre: 'Puerto la Cruz', precio: 4 }
+    'ZD1': { nombre: 'Casco central', precio: 1 },
+    'ZD2': { nombre: 'Lecheria', precio: 2 },
+    'ZD3': { nombre: 'Doral beach', precio: 2 },
+    'ZD4': { nombre: 'Pueblo viejo', precio: 2 },
+    'ZD5': { nombre: 'Puerto morro', precio: 2 },
+    'ZD6': { nombre: 'Caribean mall', precio: 2 },
+    'ZD7': { nombre: 'Venecia', precio: 2 },
+    'ZD8': { nombre: 'Costanera', precio: 2 },
+    'ZD9': { nombre: 'Las garazas', precio: 2 },
+    'ZD10': { nombre: 'Crucero', precio: 2 },
+    'ZD11': { nombre: 'Colinas del neveri', precio: 2 },
+    'ZD12': { nombre: 'Vistamar', precio: 2 },
+    'ZD13': { nombre: 'Cerro el morro', precio: 2 },
+    'ZD14': { nombre: 'Intercomunal', precio: 3 },
+    'ZD15': { nombre: 'Barcelona', precio: 3 },
+    'ZD16': { nombre: 'Puerto la cruz', precio: 3 },
+    'ZD17': { nombre: 'Guanta', precio: 3 },
+    'ZD18': { nombre: 'El rincon', precio: 5 },
+    'ZD19': { nombre: 'San diego', precio: 5 },
+    'ZD20': { nombre: 'Areopuerto', precio: 5 }
 };
 
 function getMenuSmashCod() {
