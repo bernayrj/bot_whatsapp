@@ -203,6 +203,7 @@ const pedidos = {};
 const seleccionSabores = {};
 const pedidoTimeouts = {};
 const datosRecepcion = {};
+const telefonoATC = '04143354594'
 
 // Catálogos SOLO por código
 
@@ -428,7 +429,9 @@ const listenMessage = () => {
                                     sendMessage(from, 'Ha ocurrido un error, intenta de nuevo');
                                 } else {
                                     ordenNum = results[0][0]?.orden || null;
-                                    sendMessage(from, 'Perfecto, tu pago móvil ha sido registrado para su validacion. En breve nuestro equipo se comunicará contigo para coordinar la entrega.\n\n'+ nombreCliente + ', tu orden es: '+ ordenNum);
+                                    sendMessage(from, 'Perfecto, tu pago móvil ha sido registrado para su validacion. En breve nuestro equipo se comunicará contigo para coordinar la entrega.\n\n'+ nombreCliente + ', tu orden es: '+ ordenNum );
+                                    setTimeout(()=> {
+                                    sendMessage(from, 'En caso de cualquier incidente con tu pedido, puedes escribir por Whastapp al: '+telefonoATC)},1000)
                                     broadcastNewOrder();
                                 }
 
@@ -552,7 +555,7 @@ const listenMessage = () => {
         switch (texto) {
             case 'delivery':
                 pedidos[from] = pedidos[from] || [];
-                sendMessage(from, menuDelivery + '\n\nEscribe el código de la zona de entrega de tu pedido. Ejempo: ZD1- para Lechería');
+                sendMessage(from, menuDelivery + '\n\nEscribe el código de la zona de entrega de tu pedido. Ejempo: ZD2- para Lechería');
                 break;
             case 'menu':
                 sendMessage(from, '¿Qué te provoca hoy? \n\n🫓 *Arepas*  \n🍔 *Burger*\n\nEscribe _*AREPAS*_ o _*BURGER*_ para conocer nuestro menú');
@@ -691,6 +694,8 @@ const listenMessage = () => {
                                 ordenNum = results[0][0]?.orden || null;
                                 broadcastNewOrder();
                                 sendMessage(from, 'Perfecto, puedes pagar en efectivo al momento de la entrega. En breve nuestro equipo se comunicara contigo para coordinar los detalles de entrega.\n\n'+'Tu orden es: ' + ordenNum);
+                                setTimeout(()=> {
+                                sendMessage(from, 'En caso de cualquier incidente con tu pedido, puedes escribir por Whastapp al : '+telefonoATC)},1000)
                             }
                         });
                     });
@@ -721,6 +726,8 @@ const listenMessage = () => {
                                 ordenNum = results[0][0]?.orden || null;
                                 broadcastNewOrder();
                                 sendMessage(from, 'Perfecto, puedes pagar en punto de venta al momento de la entrega. En breve nuestro equipo se comunicara contigo para coordinar los detalles de entrega.\n\n'+'Tu orden es: ' + ordenNum);
+                                setTimeout(()=> {
+                                sendMessage(from, 'En caso de cualquier incidente con tu pedido, puedes escribir por Whastapp al: '+telefonoATC)},1000)
                             }
                         });
                     });
