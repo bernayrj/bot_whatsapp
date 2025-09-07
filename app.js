@@ -242,12 +242,12 @@ const hamburguesasCod = {
     'HB9': { nombre: 'Triple Smash Rico',descripcion: 'Triple carne', precios: { S: 6, P: 7, C: 8.5 } },
     'HB10': { nombre: 'Keto Burger', descripcion: 'Lechuga, carne, tocienta, ketchup y mayonesa', precios: { S: 3.5, P: 4.5, C: 6 } },    
 };
-
+/* 
 const nuggetsCod = {
     'NG1': { nombre: 'Nuggets de 4 piezas', precios: { S: 1.5, P: 2.5, C: 4 } },
     'NG2': { nombre: 'Nuggets de 6 piezas', precios: { S: 2, P: 3, C: 4.5 } },
     'NG3': { nombre: 'Nuggets de 10 piezas', precios: { S: 4.5, P: 5.5, C: 7 } }
-};
+}; */
 
 const papasCod = {
     'PA1': { nombre: 'Papas clásicas', precio: 1 },
@@ -558,6 +558,7 @@ const listenMessage = () => {
                 sendMessage(from, menuDelivery + '\n\nEscribe el código de la zona de entrega de tu pedido. Ejempo: ZD2- para Lechería');
                 break;
             case 'menu':
+            case 'menú':
                 sendMessage(from, '¿Qué te provoca hoy? \n\n🫓 *Arepas*  \n🍔 *Burger*\n\nEscribe _*AREPAS*_ o _*BURGER*_ para conocer nuestro menú');
                 break;
             case 'arepa':
@@ -654,6 +655,7 @@ const listenMessage = () => {
                 }
                 break;
             case 'pago movil':
+            case 'pago móvil':
                 if (pedidoTimeouts[from]) {
                     clearTimeout(pedidoTimeouts[from]);
                     delete pedidoTimeouts[from];
