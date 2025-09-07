@@ -203,7 +203,7 @@ const pedidos = {};
 const seleccionSabores = {};
 const pedidoTimeouts = {};
 const datosRecepcion = {};
-const telefonoATC = '04143354594'
+const telefonoATC = '0414-3354595';
 
 // Catálogos SOLO por código
 
@@ -431,8 +431,9 @@ const listenMessage = () => {
                                     ordenNum = results[0][0]?.orden || null;
                                     sendMessage(from, 'Perfecto, tu pago móvil ha sido registrado para su validacion. En breve nuestro equipo se comunicará contigo para coordinar la entrega.\n\n'+ nombreCliente + ', tu orden es: '+ ordenNum );
                                     setTimeout(()=> {
-                                    sendMessage(from, 'En caso de cualquier incidente con tu pedido, puedes escribir por Whastapp al: '+telefonoATC)},1000)
+                                    sendMessage( from, 'Comunicate con soporte al: '+telefonoATC +' en caso de incidencia con tu pedido. (solo Whatsapp)' )},1000)
                                     broadcastNewOrder();
+
                                 }
 
                             });
@@ -538,7 +539,7 @@ const listenMessage = () => {
             iniciarTimeoutPedido(from);
             sendMessage(
                 from,
-                `Agregado: ${productoAgregado.cantidad} x ${productoAgregado.item} con sabores: ${sabores.join(', ')}\n\nEscribe _*V*_ para ver el total de tu pedido o sigue agregando productos para tu pedido.`
+                `Agregado: ${productoAgregado.cantidad} x ${productoAgregado.item} con sabores: ${sabores.join(', ')}\n\nEscribe _*V*_ para ver tu pedido o sigue agregando productos para tu pedido.`
             );
             return;
         }
@@ -556,7 +557,7 @@ const listenMessage = () => {
             case 'delivery':
             case 'd':
                 pedidos[from] = pedidos[from] || [];
-                sendMessage(from, menuDelivery + '\n\nEscribe el código de la zona de entrega de tu pedido. Ejempo: ZD2- para Lechería');
+                sendMessage(from, menuDelivery + '\n\nEscribe solo el código de la zona de entrega de tu pedido. Ejempo: para un delivery a Lecheria, escribe ZD2');
                 break;
             case 'menu':
             case 'menú':
@@ -606,7 +607,7 @@ const listenMessage = () => {
                     if (!global.ultimoPedido) global.ultimoPedido = {};
                     global.ultimoPedido[from] = { fecha, resumen, total };
                 } else {
-                    sendMessage(from, 'Aún no has agregado productos. Escribe *M* para comenzar armar tu pedido.');
+                    sendMessage(from, 'Aún no haz agregado productos. Escribe *M* para comenzar armar tu pedido.');
                 }
                 break;
             case 'borrar':
@@ -654,7 +655,7 @@ const listenMessage = () => {
                         sendMessage(from, 'Indícanos tu nombre:');
                         delete pedidos[from];
                     } else {
-                        sendMessage(from, 'No conocemos tu zona de entrega. Escribela para agregarla\n\n' + menuDelivery);
+                        sendMessage(from, 'No conocemos tu zona de entrega. Escribela para agregarla\n\n' + menuDelivery +'\n\nEscribe solo el código de la zona de entrega de tu pedido. Ejemplo: para un delivery a Lecheria, escribe ZD2');
                     }
                 } else {
                     sendMessage(from, 'Aún no has agregado productos. Escribe *M* para comenzar tu pedido.');
@@ -704,7 +705,7 @@ const listenMessage = () => {
                                 broadcastNewOrder();
                                 sendMessage(from, 'Perfecto, puedes pagar en efectivo al momento de la entrega. En breve nuestro equipo se comunicara contigo para coordinar los detalles de entrega.\n\n'+'Tu orden es: ' + ordenNum);
                                 setTimeout(()=> {
-                                sendMessage(from, 'En caso de cualquier incidente con tu pedido, puedes escribir por Whastapp al : '+telefonoATC)},1000)
+                                sendMessage( from, 'Comunicate con soporte al: '+telefonoATC +' en caso de incidencia con tu pedido. (solo Whatsapp)' )},1000)
                             }
                         });
                     });
@@ -736,7 +737,7 @@ const listenMessage = () => {
                                 broadcastNewOrder();
                                 sendMessage(from, 'Perfecto, puedes pagar en punto de venta al momento de la entrega. En breve nuestro equipo se comunicara contigo para coordinar los detalles de entrega.\n\n'+'Tu orden es: ' + ordenNum);
                                 setTimeout(()=> {
-                                sendMessage(from, 'En caso de cualquier incidente con tu pedido, puedes escribir por Whastapp al: '+telefonoATC)},1000)
+                                sendMessage( from, 'Comunicate con soporte al: '+telefonoATC +' en caso de incidencia con tu pedido. (solo Whatsapp)' )},1000)
                             }
                         });
                     });
@@ -778,7 +779,7 @@ const listenMessage = () => {
                             if (matchCodigoArepa.nombre.includes('mariscos')) {
                             sendMessage(from, `Indica 1 código de cada menú, separados por coma.\nSabores normales:\n${menuSabores}\nSabores mar:\n${menuSaboresMar}`);
                             } else {
-                                sendMessage(from, `*Sabores:*\n${menuSabores}\n\n_*Responde con los códigos exactos de los sabores separados por coma. (Ejemplo: SA1, SA7 - para pollo, tocineta )*_`);
+                                sendMessage(from, `*Sabores:*\n${menuSabores}\n\n_*Responde solo con los códigos exactos de los sabores separados por coma. (Ejemplo: SA1, SA7 - para pollo, tocineta )*_`);
                             }
                         })
                         return;
@@ -793,7 +794,7 @@ const listenMessage = () => {
                         pedidos[from] = pedidos[from] || [];
                         pedidos[from].push(producto);
                         iniciarTimeoutPedido(from);
-                        sendMessage(from, `Agregado: ${producto.cantidad} x ${producto.item} ($${producto.precio} c/u) = $${producto.subtotal}\n\nEscribe _*V*_ para ver el total de tu pedido o sigue agregando productos a tu pedido.`);
+                        sendMessage(from, `Agregado: ${producto.cantidad} x ${producto.item} ($${producto.precio} c/u) = $${producto.subtotal}\n\nEscribe _*V*_ para ver tu pedido o sigue agregando productos a tu pedido.`);
                         return;
                     }
                 }
@@ -832,7 +833,7 @@ const listenMessage = () => {
                         iniciarTimeoutPedido(from);
                         sendMessage(
                             from,
-                            `Agregado: ${producto.cantidad} x ${producto.item} ($${producto.precio} c/u) = $${producto.subtotal}\n\nEscribe _*V*_ para ver el total de tu pedido o sigue agregando productos a tu pedido.`
+                            `Agregado: ${producto.cantidad} x ${producto.item} ($${producto.precio} c/u) = $${producto.subtotal}\n\nEscribe _*V*_ para ver tu pedido o sigue agregando productos a tu pedido.`
                         );
                     } else {
                         sendMessage(from, 'Opción inválida. Responde con S (sola), P (con papas) o C (combo).');
@@ -894,7 +895,7 @@ const listenMessage = () => {
                     pedidos[from] = pedidos[from] || [];
                     pedidos[from].push(producto);
                     iniciarTimeoutPedido(from);
-                    sendMessage(from, `Agregado: ${producto.cantidad} x ${producto.item} ($${producto.precio} c/u) = $${producto.subtotal}\n\nEscribe _*V*_ para ver el total de tu pedido o sigue agregando productos a tu pedido.`);
+                    sendMessage(from, `Agregado: ${producto.cantidad} x ${producto.item} ($${producto.precio} c/u) = $${producto.subtotal}\n\nEscribe _*V*_ para ver tu pedido o sigue agregando productos a tu pedido.`);
                     return;
                 }
 
@@ -931,7 +932,7 @@ const listenMessage = () => {
                     pedidos[from] = pedidos[from] || [];
                     pedidos[from].push(producto);
                     iniciarTimeoutPedido(from);
-                    sendMessage(from, `Agregado: ${producto.cantidad} x ${producto.item} ($${producto.precio} c/u) = $${producto.subtotal}\n\nEscribe _*V*_ para ver el total de tu pedido o sigue agregando productos a tu pedido.`);
+                    sendMessage(from, `Agregado: ${producto.cantidad} x ${producto.item} ($${producto.precio} c/u) = $${producto.subtotal}\n\nEscribe _*V*_ para ver tu pedido o sigue agregando productos a tu pedido.`);
                     return;
                 }
                     }
@@ -959,7 +960,7 @@ const listenMessage = () => {
                     return;
                 }
 
-                sendMessage(from, 'No podemos entender tu orden, valida que hayas escrito el comando indicado correctamnete ó escribe _*D*_ para comenzar');
+                sendMessage(from, 'No podemos entender tu orden, valida que hayas escrito el comando indicado correctamente ó escribe _*D*_ para comenzar');
         }
     });
 };
