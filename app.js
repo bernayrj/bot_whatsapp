@@ -261,7 +261,7 @@ const bebidasCod = {
     'BE3': { nombre: 'Agua 355ml', precio: 1 },
     'BE4': { nombre: 'Refresco 1LT', precio: 2 },
     'BE5': { nombre: 'Refresco 1 1/2 LT', precio: 2.5 },
-    'BE6': { nombre: 'Refresco 2 LT', precio: 3 }
+    /* 'BE6': { nombre: 'Refresco 2 LT', precio: 3 } */
 };
 
 const variantesBurger = {
