@@ -242,13 +242,13 @@ const hamburguesasCod = {
     'HB9': { nombre: 'Triple Smash Rico',descripcion: 'Triple carne', precios: { S: 6, P: 7, C: 8.5 } },
     'HB10': { nombre: 'Keto Burger', descripcion: 'Lechuga, carne, tocienta, ketchup y mayonesa', precios: { S: 3.5, P: 4.5, C: 6 } },    
 };
-/* 
-const nuggetsCod = {
+
+/* const nuggetsCod = {
     'NG1': { nombre: 'Nuggets de 4 piezas', precios: { S: 1.5, P: 2.5, C: 4 } },
     'NG2': { nombre: 'Nuggets de 6 piezas', precios: { S: 2, P: 3, C: 4.5 } },
     'NG3': { nombre: 'Nuggets de 10 piezas', precios: { S: 4.5, P: 5.5, C: 7 } }
-}; */
-
+};
+ */
 const papasCod = {
     'PA1': { nombre: 'Papas clásicas', precio: 1 },
     'PA2': { nombre: 'Canoa familiar', precio: 2 },
@@ -308,10 +308,10 @@ function getMenuSmashCod() {
         menu += ` *${data.nombre}*:\n`;
         menu += ` _${data.descripcion}_\n\n`;
     });
-    menu += '🍗 *Nuggets de pollo*\n'
+    /* menu += '\n🍗 *Nuggets de pollo*\n'
     Object.entries(nuggetsCod).forEach(([cod, data]) => {
         menu += `- *${cod}*: ${data.nombre}\n`;
-    });
+    }); */ 
     menu += '\n🍟 *Papas fritas*\n'
     Object.entries(papasCod).forEach(([cod, data]) => {
         menu += `- *${cod}*: ${data.nombre}  $${data.precio}\n`;
@@ -444,7 +444,7 @@ const listenMessage = () => {
                 });
                 return;
             } else {
-                sendMessage(from, 'No podemos entender tu orden, escribe _*DELIVERY*_ para comenzar');
+                sendMessage(from, 'No podemos entender tu orden, valida que hayas escrito el comando correctamnete ó escribe _*D*_ para comenzar');
                 return;
             }
         }
@@ -538,31 +538,34 @@ const listenMessage = () => {
             iniciarTimeoutPedido(from);
             sendMessage(
                 from,
-                `Agregado: ${productoAgregado.cantidad} x ${productoAgregado.item} con sabores: ${sabores.join(', ')}\n\nEscribe _*VER*_ para ver el total de tu pedido o sigue agregando productos.`
+                `Agregado: ${productoAgregado.cantidad} x ${productoAgregado.item} con sabores: ${sabores.join(', ')}\n\nEscribe _*V*_ para ver el total de tu pedido o sigue agregando productos para tu pedido.`
             );
             return;
         }
 
-        const saludos = ['hola', 'buenas', 'buenas tardes', 'buenos dias', 'hey', 'hi', 'hello'];
+        const saludos = ['hola', 'hola buenas noches','hola buenos dias','hola buenas tardes', 'buenas noches', 'buenas tardes', 'buenos dias', 'hey', 'hi', 'hello'];
         if (saludos.includes(texto)) {
             sendMedia(
                 from, 'logo1.jpg',
-                '*Hola Bienvenido a:*\n\n *EL Arepazo*🫓 y\n *Smash Rico*🍔\n\nEscribe _*DELIVERY*_ para conocer tu zona de entrega.'
+                '*Hola Bienvenido a:*\n\n *EL Arepazo*🫓 y\n *Smash Rico*🍔\n\nEscribe _*DELIVERY ó D*_ para conocer tu zona de entrega.'
             );
             return;
         }
 
         switch (texto) {
             case 'delivery':
+            case 'd':
                 pedidos[from] = pedidos[from] || [];
                 sendMessage(from, menuDelivery + '\n\nEscribe el código de la zona de entrega de tu pedido. Ejempo: ZD2- para Lechería');
                 break;
             case 'menu':
             case 'menú':
-                sendMessage(from, '¿Qué te provoca hoy? \n\n🫓 *Arepas*  \n🍔 *Burger*\n\nEscribe _*AREPAS*_ o _*BURGER*_ para conocer nuestro menú');
+            case 'm':
+                sendMessage(from, '¿Qué te provoca hoy? \n\n🫓 *Arepas*  \n🍔 *Burger*\n\nEscribe _*A*_ para arepas o _*B*_ para hamburgesas y enviarte el menú');
                 break;
             case 'arepa':
             case 'arepas':
+            case 'a':
                 pedidos[from] = pedidos[from] || [];
                 sendMedia(from, 
                 'arepazo.png', 
@@ -571,6 +574,7 @@ const listenMessage = () => {
                 break;
             case 'hamburguesas':
             case 'burger':
+            case 'b':
                 pedidos[from] = pedidos[from] || [];
                 sendMedia(
                     from,
@@ -580,6 +584,7 @@ const listenMessage = () => {
                 );
                 break;
             case 'ver':
+            case 'v':
                 if (pedidos[from] && pedidos[from].length > 0) {
                     let total = 0;
                     let resumen = '🧾 *Tu pedido:*\n';
@@ -595,13 +600,13 @@ const listenMessage = () => {
                     resumen += `\n*Total: Bs. ${(total*tasaActual).toFixed(2)}*`;
                     sendMessage(from, resumen);
                     setTimeout(()=> {
-                        sendMessage(from, 'Escribe _*ORDENAR*_ para confimar tu pedido o _*BORRAR*_ para eliminarlo ');
+                        sendMessage(from, 'Escribe _*O*_ para ordenar y confimar tu pedido o _*B*_ para borrarlo');
                     }, 1000);
                     
                     if (!global.ultimoPedido) global.ultimoPedido = {};
                     global.ultimoPedido[from] = { fecha, resumen, total };
                 } else {
-                    sendMessage(from, 'Aún no has agregado productos. Escribe *MENU* para comenzar tu pedido.');
+                    sendMessage(from, 'Aún no has agregado productos. Escribe *M* para comenzar armar tu pedido.');
                 }
                 break;
             case 'borrar':
@@ -610,9 +615,10 @@ const listenMessage = () => {
                     delete pedidoTimeouts[from];
                 }
                 delete pedidos[from];
-                sendMessage(from, 'Tu pedido ha sido eliminado. Escribe _*MENU*_ si deseas comenzar un nuevo pedido');
+                sendMessage(from, 'Tu pedido ha sido eliminado. Escribe _*M*_ si deseas comenzar un nuevo pedido');
                 break;
             case 'ordenar':
+            case 'o':
                 if (pedidos[from] && pedidos[from].length > 0) {
                     const yaTieneDelivery = pedidos[from].some(p => p.item && p.item.startsWith('Delivery'));
                     if (yaTieneDelivery) {
@@ -651,7 +657,7 @@ const listenMessage = () => {
                         sendMessage(from, 'No conocemos tu zona de entrega. Escribela para agregarla\n\n' + menuDelivery);
                     }
                 } else {
-                    sendMessage(from, 'Aún no has agregado productos. Escribe *MENU* para comenzar tu pedido.');
+                    sendMessage(from, 'Aún no has agregado productos. Escribe *M* para comenzar tu pedido.');
                 }
                 break;
             case 'pago movil':
@@ -666,12 +672,13 @@ const listenMessage = () => {
                         '*Datos para Pago Móvil:*\n' +
                         'Teléfono: 0424-8179838\n' +
                         'RIF: J-506873745\n' +
-                        'Banco: Banco de Venezuela (0102)\n' +
+                        'Banco: Banco de Venezuela (0102) ó\n' +
+                        'Banco Digital de los Trabajadores (0175)\n\n'+
                         '*Envianos tu capture del pago movil*'
                     );
                     ultimoPedido[from].esperandoPagoMovil = true;
                 } else {
-                    sendMessage(from, 'No existe ningun pedido, escribe _*DELIVERY*_ para comenzar.');
+                    sendMessage(from, 'No existe ningun pedido, escribe _*D*_ para comenzar.');
                 }
                 break;
             case 'efectivo':
@@ -786,7 +793,7 @@ const listenMessage = () => {
                         pedidos[from] = pedidos[from] || [];
                         pedidos[from].push(producto);
                         iniciarTimeoutPedido(from);
-                        sendMessage(from, `Agregado: ${producto.cantidad} x ${producto.item} ($${producto.precio} c/u) = $${producto.subtotal}\n\nEscribe _*VER*_ para ver el total de tu pedido o sigue agregando productos.`);
+                        sendMessage(from, `Agregado: ${producto.cantidad} x ${producto.item} ($${producto.precio} c/u) = $${producto.subtotal}\n\nEscribe _*V*_ para ver el total de tu pedido o sigue agregando productos a tu pedido.`);
                         return;
                     }
                 }
@@ -825,7 +832,7 @@ const listenMessage = () => {
                         iniciarTimeoutPedido(from);
                         sendMessage(
                             from,
-                            `Agregado: ${producto.cantidad} x ${producto.item} ($${producto.precio} c/u) = $${producto.subtotal}\n\nEscribe _*VER*_ para ver el total de tu pedido o sigue agregando productos.`
+                            `Agregado: ${producto.cantidad} x ${producto.item} ($${producto.precio} c/u) = $${producto.subtotal}\n\nEscribe _*V*_ para ver el total de tu pedido o sigue agregando productos a tu pedido.`
                         );
                     } else {
                         sendMessage(from, 'Opción inválida. Responde con S (sola), P (con papas) o C (combo).');
@@ -834,7 +841,7 @@ const listenMessage = () => {
                 }
 
                 // Nuggets
-                const matchCodigoNugget = nuggetsCod[nombreProducto.toUpperCase()];
+               /*  const matchCodigoNugget = nuggetsCod[nombreProducto.toUpperCase()];
                 if (matchCodigoNugget) {
                     seleccionSabores[from] = {
                         producto: {
@@ -873,7 +880,7 @@ const listenMessage = () => {
                         sendMessage(from, 'Opción inválida. Responde con S (solo), P (con papas) o C (combo).');
                     }
                     return;
-                }
+                } */
 
                 // Papas
                 const matchCodigoPapa = papasCod[texto.toUpperCase()];
@@ -887,7 +894,7 @@ const listenMessage = () => {
                     pedidos[from] = pedidos[from] || [];
                     pedidos[from].push(producto);
                     iniciarTimeoutPedido(from);
-                    sendMessage(from, `Agregado: ${producto.cantidad} x ${producto.item} ($${producto.precio} c/u) = $${producto.subtotal}\n\nEscribe _*VER*_ para ver el total de tu pedido o sigue agregando productos.`);
+                    sendMessage(from, `Agregado: ${producto.cantidad} x ${producto.item} ($${producto.precio} c/u) = $${producto.subtotal}\n\nEscribe _*V*_ para ver el total de tu pedido o sigue agregando productos a tu pedido.`);
                     return;
                 }
 
@@ -924,7 +931,7 @@ const listenMessage = () => {
                     pedidos[from] = pedidos[from] || [];
                     pedidos[from].push(producto);
                     iniciarTimeoutPedido(from);
-                    sendMessage(from, `Agregado: ${producto.cantidad} x ${producto.item} ($${producto.precio} c/u) = $${producto.subtotal}\n\nEscribe _*VER*_ para ver el total de tu pedido o sigue agregando productos.`);
+                    sendMessage(from, `Agregado: ${producto.cantidad} x ${producto.item} ($${producto.precio} c/u) = $${producto.subtotal}\n\nEscribe _*V*_ para ver el total de tu pedido o sigue agregando productos a tu pedido.`);
                     return;
                 }
                     }
@@ -935,7 +942,7 @@ const listenMessage = () => {
                     pedidos[from] = pedidos[from] || [];
                     const yaTieneDelivery = pedidos[from].some(p => p.item && p.item.startsWith('Delivery'));
                     if (yaTieneDelivery) {
-                        sendMessage(from, 'Ya has agregado una zona de delivery a tu pedido.\n\nEscribe _*MENU*_ para continuar con tu orden.');
+                        sendMessage(from, 'Ya has agregado una zona de delivery a tu pedido.\n\nEscribe _*M*_ para continuar con tu orden.');
                     } else {
                         const producto = {
                             item: 'Delivery ' + matchCodigoDelivery.nombre,
@@ -946,13 +953,13 @@ const listenMessage = () => {
                         pedidos[from].push(producto);
                         sendMessage(
                             from,
-                            `🛵 Gracias 👍🏽 por compartir tu zona de entrega.\n\nEscribe _*MENU*_ para comenzar tomar tu pedido o _*VER*_ para conocer tu pedido.`
+                            `🛵 Gracias 👍🏽 por compartir tu zona de entrega.\n\nEscribe _*M*_ para enviarte el menú y comenzar tomar tu pedido o _*V*_ para ver tu pedido.`
                         );
                     }
                     return;
                 }
 
-                sendMessage(from, 'No podemos entender tu orden, escribe _*DELIVERY*_ para comenzar');
+                sendMessage(from, 'No podemos entender tu orden, valida que hayas escrito el comando indicado correctamnete ó escribe _*D*_ para comenzar');
         }
     });
 };
@@ -972,6 +979,6 @@ const iniciarTimeoutPedido = (from) => {
     delete pedidoTimeouts[from];
     pedidoTimeouts[from] = setTimeout(() => {
         pedidos[from] = [];
-        sendMessage(from, '⏰ Su pedido ha sido eliminado por inactividad. Escriba _*DELIVERY*_ para volver a comenzar.');
-    }, 3 * 60 * 1000);
+        sendMessage(from, '⏰ Su pedido ha sido eliminado por inactividad. Escriba _*D*_ para volver a comenzar.');
+    }, 10 * 60 * 1000);
 };
