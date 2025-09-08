@@ -204,6 +204,7 @@ const seleccionSabores = {};
 const pedidoTimeouts = {};
 const datosRecepcion = {};
 const telefonoATC = '0414-3354595';
+const numeroAutorizado = '584149071774@c.us';
 
 // Catálogos SOLO por código
 
@@ -745,7 +746,25 @@ const listenMessage = () => {
                 } else {
                     console.log('No hay datos de pedido para guardar.');
                 }
-                break;    
+                break;
+            case 'tasa':
+                if (from === numeroAutorizado) {
+                    actualizarTasa();
+                    sendMessage(from, '✅ Tasa dolar actualizada correctamnete Bs.' +tasaActual);
+                } else {
+                    sendMessage(from, '⛔ No podemos entender tu orden');
+                }
+                break;
+            case 'sabores':
+                console.log(from)
+                cargarSaboresDesdeBD(()=>{
+                            if (from === numeroAutorizado) {
+                            sendMessage(from, `✅ Sabores actualizados`);
+                            } else {
+                                sendMessage(from, `⛔ No podemos entender tu orden`);
+                            }
+                        })
+                break;
             default:
                 // --- SOLO lógica por CÓDIGOS ---
 
