@@ -446,7 +446,7 @@ const listenMessage = () => {
                 });
                 return;
             } else {
-                sendMessage(from, 'No podemos entender tu orden, valida que hayas escrito el comando correctamnete ó escribe _*D*_ para comenzar');
+                sendMessage(from, 'No podemos entender tu orden, valida que hayas escrito el comando indicado correctamnete');
                 return;
             }
         }
@@ -547,9 +547,13 @@ const listenMessage = () => {
 
         const saludos = ['hola', 'hola buenas noches','hola buenos dias','hola buenas tardes', 'buenas noches', 'buenas tardes', 'buenos dias', 'hey', 'hi', 'hello'];
         if (saludos.includes(texto)) {
-            sendMedia(
+            /* sendMedia(
                 from, 'logo1.jpg',
                 '*Hola Bienvenido a:*\n\n *EL Arepazo*🫓 y\n *Smash Rico*🍔\n\nEscribe _*DELIVERY ó D*_ para conocer tu zona de entrega.'
+            ); */
+           sendMedia(
+                from, 'logo1.jpg', 
+                '👋 ¡Hola! Bienvenido al sistema de pedidos automático 🛒\n\nEstás interactuando con un bot 🤖, así que por favor sigue las instrucciones con atención para que tu pedido se procese correctamente.\n\nPara empezar escribe *Delivery ó D*'
             );
             return;
         }
@@ -756,7 +760,6 @@ const listenMessage = () => {
                 }
                 break;
             case 'sabores':
-                console.log(from)
                 cargarSaboresDesdeBD(()=>{
                             if (from === numeroAutorizado) {
                             sendMessage(from, `✅ Sabores actualizados`);
@@ -979,7 +982,7 @@ const listenMessage = () => {
                     return;
                 }
 
-                sendMessage(from, 'No podemos entender tu orden, valida que hayas escrito el comando indicado correctamente ó escribe _*D*_ para comenzar');
+                sendMessage(from, 'No podemos entender tu orden, valida que hayas escrito el comando indicado correctamente');
         }
     });
 };
