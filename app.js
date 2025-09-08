@@ -571,7 +571,7 @@ const listenMessage = () => {
                 sendMedia(from, 
                 'arepazo.png', 
                 getMenuArepazoCod() + 
-                '\n\n_*Responde con la cantidad y el código del producto que quieres (Ejemplo: 2 MA1 - para arepa mixta 2 sabores).*_');
+                '\n\n_*Responde con la cantidad y el código del producto que quieres (Ejemplo: 2 MA1 - para 2 arepas mixta 2 sabores). Todas las unidades seran del mismo sabor del codigo seleccionado a continuacion.*_');
                 break;
             case 'hamburguesas':
             case 'burger':
@@ -601,7 +601,7 @@ const listenMessage = () => {
                     resumen += `\n*Total: Bs. ${(total*tasaActual).toFixed(2)}*`;
                     sendMessage(from, resumen);
                     setTimeout(()=> {
-                        sendMessage(from, 'Escribe _*O*_ para ordenar y confimar tu pedido o _*B*_ para borrarlo');
+                        sendMessage(from, 'Escribe _*O*_ para ordenar y confimar tu pedido ó _*BORRAR*_ para eliminarlo');
                     }, 1000);
                     
                     if (!global.ultimoPedido) global.ultimoPedido = {};
@@ -954,7 +954,7 @@ const listenMessage = () => {
                         pedidos[from].push(producto);
                         sendMessage(
                             from,
-                            `🛵 Gracias 👍🏽 por compartir tu zona de entrega.\n\nEscribe _*M*_ para enviarte el menú y comenzar tomar tu pedido o _*V*_ para ver tu pedido.`
+                            `🛵 Gracias por compartir tu zona de entrega.\n\nEscribe _*M*_ para enviarte el menú y tomar tu pedido.`
                         );
                     }
                     return;
