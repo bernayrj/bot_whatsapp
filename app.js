@@ -612,7 +612,7 @@ const listenMessage = () => {
                     if (!global.ultimoPedido) global.ultimoPedido = {};
                     global.ultimoPedido[from] = { fecha, resumen, total };
                 } else {
-                    sendMessage(from, 'Aún no haz agregado productos. Escribe *M* para comenzar armar tu pedido.');
+                    sendMessage(from, 'Aún no haz agregado productos. Escribe *M* para enviarte el menú y comenzar a tomar tu pedido.');
                 }
                 break;
             case 'borrar':
@@ -665,7 +665,7 @@ const listenMessage = () => {
                         sendMessage(from, 'No conocemos tu zona de entrega. Escribela para agregarla\n\n' + menuDelivery +'\n\nEscribe solo el código de la zona de entrega de tu pedido. Ejemplo: para un delivery a Lecheria, escribe ZD2');
                     }
                 } else {
-                    sendMessage(from, 'Aún no has agregado productos. Escribe *M* para comenzar tu pedido.');
+                    sendMessage(from, 'Aún no has agregado productos. Escribe *M* para enviarte el menú y comenzar a tomar tu pedido.');
                 }
                 break;
             case 'pago movil':
