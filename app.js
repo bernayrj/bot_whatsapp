@@ -344,7 +344,7 @@ const listenMessage = () => {
         const { from, body } = msg;
         const texto = body.toLowerCase().trim();
 
-        // --- Captura de datos adicionales ---
+        // --- Captura de datos facturacion ---
         if (datosRecepcion[from]) {
             // Validar nombre (solo letras y espacios)
             if (!datosRecepcion[from].nombre) {
@@ -396,59 +396,99 @@ const listenMessage = () => {
             }
         }
 
-        // === BLOQUE PARA RECIBIR Y GUARDAR IMAGEN DE PAGO MOVIL ===
+        // === BLOQUE PARA RECIBIR Y GUARDAR IMAGEN DE PAGO MOVIL O EFECTIVO ===
         if (msg.hasMedia) {
             if (
                 typeof ultimoPedido !== 'undefined' &&
-                ultimoPedido[from] &&
-                ultimoPedido[from].esperandoPagoMovil
+                ultimoPedido[from]
             ) {
-                msg.downloadMedia().then(media => {
-                    if (media) {
-                        const pagosDir = path.join(__dirname, 'pagos');
-                        if (!fs.existsSync(pagosDir)) {
-                            fs.mkdirSync(pagosDir);
-                        }
-                        const fecha = new Date().toISOString().replace(/[:.]/g, '-');
-                        const filename = `pago_${from}_${fecha}.${media.mimetype.split('/')[1]}`;
-                        const filePath = path.join(pagosDir, filename);
-                        fs.writeFileSync(filePath, media.data, 'base64');
-                        sendMessage(from, '¡Comprobante recibido! Pronto validaremos tu pago.');
-
-                        // === GUARDAR ORDEN EN BD ===
-                        const { resumen, total } = ultimoPedido[from];
-                        const nombreCliente = msg._data?.notifyName || 'Desconocido';
-                        db.query('CALL add_customer(?, ?)', [from, nombreCliente], (errCliente, resCliente) => {
-                            if (errCliente) {
-                                console.log('Error al guardar cliente:', errCliente);
-                                return;
+                if (ultimoPedido[from].esperandoPagoMovil) {
+                    msg.downloadMedia().then(media => {
+                        if (media) {
+                            const pagosDir = path.join(__dirname, 'pagos');
+                            if (!fs.existsSync(pagosDir)) {
+                                fs.mkdirSync(pagosDir);
                             }
-                            let ordenNum = null;
-                            db.query('CALL add_order (?, ?, ?, ?, ?, ?)', [fecha, from, resumen, total, 'Pago Movil', filename], (err, results) => {
-                                if (err) {
-                                    console.log('Error en consulta:', err);
-                                    sendMessage(from, '⚠️ Ha ocurrido un error, intenta de nuevo');
-                                } else {
-                                    ordenNum = results[0][0]?.orden || null;
-                                    sendMessage(from, 'Perfecto, tu pago móvil ha sido registrado para su validacion. En breve nuestro equipo se comunicará contigo para coordinar la entrega.\n\n'+ nombreCliente + ', tu orden es: '+ ordenNum );
-                                    setTimeout(()=> {
-                                    sendMessage( from, 'Comunicate con soporte al: '+telefonoATC +' en caso de incidencia con tu pedido. (solo Whatsapp)' )},1000)
-                                    broadcastNewOrder();
+                            const fecha = new Date().toISOString().replace(/[:.]/g, '-');
+                            const filename = `pago_${from}_${fecha}.${media.mimetype.split('/')[1]}`;
+                            const filePath = path.join(pagosDir, filename);
+                            fs.writeFileSync(filePath, media.data, 'base64');
+                            sendMessage(from, '¡Comprobante recibido! Pronto validaremos tu pago.');
 
+                            // === GUARDAR ORDEN EN BD ===
+                            const { resumen, total } = ultimoPedido[from];
+                            const nombreCliente = msg._data?.notifyName || 'Desconocido';
+                            db.query('CALL add_customer(?, ?)', [from, nombreCliente], (errCliente, resCliente) => {
+                                if (errCliente) {
+                                    console.log('Error al guardar cliente:', errCliente);
+                                    return;
                                 }
-
+                                let ordenNum = null;
+                                db.query('CALL add_order (?, ?, ?, ?, ?, ?)', [fecha, from, resumen, total, 'Pago Movil', filename], (err, results) => {
+                                    if (err) {
+                                        console.log('Error en consulta:', err);
+                                        sendMessage(from, '⚠️ Ha ocurrido un error, intenta de nuevo');
+                                    } else {
+                                        ordenNum = results[0][0]?.orden || null;
+                                        sendMessage(from, 'Perfecto, tu pago móvil ha sido registrado para su validacion. En breve nuestro equipo se comunicará contigo para coordinar la entrega.\n\n'+ nombreCliente + ', tu orden es: '+ ordenNum );
+                                        setTimeout(()=> {
+                                            sendMessage( from, 'Comunicate con soporte al: '+telefonoATC +' en caso de incidencia con tu pedido. (solo Whatsapp)' )},1000)
+                                        broadcastNewOrder();
+                                    }
+                                });
                             });
-                        });
 
-                        delete ultimoPedido[from].esperandoPagoMovil;
-                        delete ultimoPedido[from];
-                    }
-                });
-                return;
-            } else {
-                sendMessage(from, '⚠️ No podemos entender tu orden, valida que hayas escrito el comando indicado correctamnete');
-                return;
+                            delete ultimoPedido[from].esperandoPagoMovil;
+                            delete ultimoPedido[from];
+                        }
+                    });
+                    return;
+                } else if (ultimoPedido[from].esperandoEfectivo) {
+                    msg.downloadMedia().then(media => {
+                        if (media) {
+                            const pagosDir = path.join(__dirname, 'pagos');
+                            if (!fs.existsSync(pagosDir)) {
+                                fs.mkdirSync(pagosDir);
+                            }
+                            const fecha = new Date().toISOString().replace(/[:.]/g, '-');
+                            const filename = `pago_${from}_${fecha}.${media.mimetype.split('/')[1]}`;
+                            const filePath = path.join(pagosDir, filename);
+                            fs.writeFileSync(filePath, media.data, 'base64');
+                            sendMessage(from, '¡Foto recibida, pronto validaremos.');
+
+                            // === GUARDAR ORDEN EN BD ===
+                            const { resumen, total } = ultimoPedido[from];
+                            const nombreCliente = msg._data?.notifyName || 'Desconocido';
+                            db.query('CALL add_customer(?, ?)', [from, nombreCliente], (errCliente, resCliente) => {
+                                if (errCliente) {
+                                    console.log('Error al guardar cliente:', errCliente);
+                                    return;
+                                }
+                                let ordenNum = null;
+                                db.query('CALL add_order (?, ?, ?, ?, ?, ?)', [fecha, from, resumen, total, 'Efectivo', filename], (err, results) => {
+                                    if (err) {
+                                        console.log('Error en consulta:', err);
+                                        sendMessage(from, '⚠️ Ha ocurrido un error, intenta de nuevo');
+                                    } else {
+                                        ordenNum = results[0][0]?.orden || null;
+                                        sendMessage(from, 'Perfecto, puedes pagar en efectivo al momento de la entrega. En breve nuestro equipo se comunicara contigo para coordinar los detalles de entrega.\n\n'+ nombreCliente +'Tu orden es: ' + ordenNum );
+                                        setTimeout(()=> {
+                                            sendMessage( from, 'Comunicate con soporte al: '+telefonoATC +' en caso de incidencia con tu pedido. (solo Whatsapp)' )},1000)
+                                        broadcastNewOrder();
+                                    }
+                                });
+                            });
+
+                            delete ultimoPedido[from].esperandoEfectivo;
+                            delete ultimoPedido[from];
+                        }
+                    });
+                    return;
+                }
             }
+            // Si no está esperando ninguno, mensaje de error
+            sendMessage(from, '⚠️ No podemos entender tu orden, valida que hayas escrito el comando indicado correctamente');
+            return;
         }
 
         // --- Lógica de selección de sabores por código ---
@@ -695,6 +735,18 @@ const listenMessage = () => {
                     delete pedidoTimeouts[from];
                 }
                 if (typeof ultimoPedido !== 'undefined' && ultimoPedido[from]) {
+                    sendMessage(from, '💵 Envianos una foto del billete con que vas a pagar tu pedido');
+                    ultimoPedido[from].esperandoEfectivo = true;
+                } else {
+                    sendMessage(from, '⚠️ No existe ningun pedido, escribe _*D*_ para comenzar.');
+                }
+                break;
+            /* case 'efectivo':
+                if (pedidoTimeouts[from]) {
+                    clearTimeout(pedidoTimeouts[from]);
+                    delete pedidoTimeouts[from];
+                }
+                if (typeof ultimoPedido !== 'undefined' && ultimoPedido[from]) {
                     const { fecha, resumen, total } = ultimoPedido[from];
                     const nombreCliente = msg._data?.notifyName || 'Desconocido';
                     db.query('CALL add_customer(?, ?)', [from, nombreCliente], (errCliente, resCliente) => {
@@ -720,7 +772,7 @@ const listenMessage = () => {
                 } else {
                     console.log('No hay datos de pedido para guardar.');
                 }
-                break;
+                break; */
             case 'punto':
                 if (pedidoTimeouts[from]) {
                     clearTimeout(pedidoTimeouts[from]);
