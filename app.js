@@ -41,10 +41,14 @@ let menuSabores = '';
 let menuSaboresMar = '';
 let menuSaboresRefresco = '';
 let menuSaboresLipton = '';
-
-// Actualizar tasa de cambio
-
+let LOG_CONVERSACIONES = false;
 let tasaActual = null;
+
+// Permitir activar/desactivar log desde WhatsApp (solo número autorizado)
+function toggleLogConversaciones(activar) {
+    LOG_CONVERSACIONES = activar;
+    console.log(`LOG_CONVERSACIONES: ${LOG_CONVERSACIONES ? 'ACTIVADO' : 'DESACTIVADO'}`);
+}
 
 // Función para consultar la tasa y almacenarla
 function actualizarTasa() {
@@ -191,6 +195,16 @@ async function resetSession() {
     }
 }
 
+// Helper para guardar mensaje en archivo por cliente
+function logConversacion(from, quien, mensaje) {
+    if (!LOG_CONVERSACIONES) return;
+    const carpeta = path.join(__dirname, 'conversaciones');
+    if (!fs.existsSync(carpeta)) fs.mkdirSync(carpeta);
+    const archivo = path.join(carpeta, `${from}.txt`);
+    const fecha = new Date().toISOString();
+    fs.appendFileSync(archivo, `[${fecha}] ${quien}: ${mensaje}\n`);
+}
+
 // Initial startup
 client = new Client({
     authStrategy: new LocalAuth({ clientId: 'default' })
@@ -204,7 +218,7 @@ const seleccionSabores = {};
 const pedidoTimeouts = {};
 const datosRecepcion = {};
 const telefonoATC = '0414-3354595';
-const numeroAutorizado = '584149071774@c.us';
+const numeroAutorizado = '584129326767@c.us';
 
 // Catálogos SOLO por código
 
@@ -343,6 +357,22 @@ const listenMessage = () => {
     client.on('message', (msg) => {
         const { from, body } = msg;
         const texto = body.toLowerCase().trim();
+        console.log(`[${from}] Cliente: ${body}`);
+        logConversacion(from, 'Cliente', body);
+
+ // === ACTIVAR/DESACTIVAR LOG SOLO PARA ADMIN ===
+        if (from === numeroAutorizado) {
+            if (texto === 'activar log') {
+                toggleLogConversaciones(true);
+                sendMessage(from, '✅ Log de conversaciones ACTIVADO');
+                return;
+            }
+            if (texto === 'desactivar log') {
+                toggleLogConversaciones(false);
+                sendMessage(from, '⛔ Log de conversaciones DESACTIVADO');
+                return;
+            }
+        }        
 
         // --- Captura de datos facturacion ---
         if (datosRecepcion[from]) {
@@ -741,39 +771,7 @@ const listenMessage = () => {
                     sendMessage(from, '⚠️ No existe ningun pedido, escribe _*D*_ para comenzar.');
                 }
                 break;
-            /* case 'efectivo':
-                if (pedidoTimeouts[from]) {
-                    clearTimeout(pedidoTimeouts[from]);
-                    delete pedidoTimeouts[from];
-                }
-                if (typeof ultimoPedido !== 'undefined' && ultimoPedido[from]) {
-                    const { fecha, resumen, total } = ultimoPedido[from];
-                    const nombreCliente = msg._data?.notifyName || 'Desconocido';
-                    db.query('CALL add_customer(?, ?)', [from, nombreCliente], (errCliente, resCliente) => {
-                        if (errCliente) {
-                            console.log('Error al guardar cliente:', errCliente);
-                            return;
-                        }
-                        let ordenNum = null;
-                        db.query('CALL add_order (?, ?, ?, ?, ?, ?)', [fecha, from, resumen, total, 'Pago Efectivo', 'no aplica'], (err, results) => {
-                            if (err) {
-                                console.log('Error en consulta:', err);
-                                sendMessage(from, ' ⚠️Ha ocurrido un error, intenta de nuevo');
-                            } else {
-                                ordenNum = results[0][0]?.orden || null;
-                                broadcastNewOrder();
-                                sendMessage(from, 'Perfecto, puedes pagar en efectivo al momento de la entrega. En breve nuestro equipo se comunicara contigo para coordinar los detalles de entrega.\n\n'+'Tu orden es: ' + ordenNum);
-                                setTimeout(()=> {
-                                sendMessage( from, 'Comunicate con soporte al: '+telefonoATC +' en caso de incidencia con tu pedido. (solo Whatsapp)' )},1000)
-                            }
-                        });
-                    });
-                    delete ultimoPedido[from];
-                } else {
-                    console.log('No hay datos de pedido para guardar.');
-                }
-                break; */
-            case 'punto':
+                case 'punto':
                 if (pedidoTimeouts[from]) {
                     clearTimeout(pedidoTimeouts[from]);
                     delete pedidoTimeouts[from];
@@ -805,6 +803,7 @@ const listenMessage = () => {
                     console.log('No hay datos de pedido para guardar.');
                 }
                 break;
+            //opciones de configiracion admin
             case 'tasa':
                 if (from === numeroAutorizado) {
                     actualizarTasa();
@@ -1043,13 +1042,16 @@ const listenMessage = () => {
 
 const sendMessage = (to, message) => {
 
-    console.log(message);
+    console.log(`[${to}] Bot: ${message}`);
+    logConversacion(to, 'Bot', message);
     client.sendMessage(to, message);
 };
 
 const sendMedia = (to, file, caption = '') => {
     const mediaFile = MessageMedia.fromFilePath(`./mediaSend/${file}`);
+    console.log(`[${to}] Bot: ${caption}`);
     client.sendMessage(to, mediaFile, { caption });
+    logConversacion(to, 'Bot', caption);
 };
 
 const iniciarTimeoutPedido = (from) => {
