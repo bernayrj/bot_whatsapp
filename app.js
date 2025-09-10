@@ -218,7 +218,8 @@ const seleccionSabores = {};
 const pedidoTimeouts = {};
 const datosRecepcion = {};
 const telefonoATC = '0414-3354595';
-const numeroAutorizado = '584129326767@c.us';
+const numeroAutorizado = [´'584129326767@c.us', '584149071774@c.us' ];
+const fecha = new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString().replace('T', ' ').replace('Z', '');
 
 // Catálogos SOLO por código
 
@@ -361,7 +362,7 @@ const listenMessage = () => {
         logConversacion(from, 'Cliente', body);
 
  // === ACTIVAR/DESACTIVAR LOG SOLO PARA ADMIN ===
-        if (from === numeroAutorizado) {
+        if (numeroAutorizado.includes(from)) {
             if (texto === 'activar log') {
                 toggleLogConversaciones(true);
                 sendMessage(from, '✅ Log de conversaciones ACTIVADO');
