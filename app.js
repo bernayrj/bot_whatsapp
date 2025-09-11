@@ -217,7 +217,7 @@ const pedidos = {};
 const seleccionSabores = {};
 const pedidoTimeouts = {};
 const datosRecepcion = {};
-const telefonoATC = '0414-3354595';
+const telefonoATC = '0414-3354594';
 const numeroAutorizado = ['584129326767@c.us', '584149071774@c.us' ];
 const fecha = new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString().replace('T', ' ').replace('Z', '');
 
