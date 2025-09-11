@@ -1043,7 +1043,7 @@ const listenMessage = () => {
                     return;
                 }
 
-                sendMessage(from, '⚠️ No podemos entender tu orden, valida que hayas escrito el comando indicado correctamente');
+                sendMessage(from, '🤖 ¡Hola! Estás interactuando con un bot automatizado.\n\nNo pudimos entender tu mensaje.\n\n‼️ Por favor, asegúrate de escribir el comando indicado correctamente si estas en el curso de un pedido.\n\nℹ️ Si no haz comenzado tu pedido, escribe *D* y sigue las instrucciones paso a paso.');
         }
     });
 };
