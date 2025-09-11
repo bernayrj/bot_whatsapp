@@ -41,7 +41,7 @@ let menuSabores = '';
 let menuSaboresMar = '';
 let menuSaboresRefresco = '';
 let menuSaboresLipton = '';
-let LOG_CONVERSACIONES = false;
+let LOG_CONVERSACIONES = true;
 let tasaActual = null;
 
 // Permitir activar/desactivar log desde WhatsApp (solo número autorizado)
@@ -341,7 +341,7 @@ function getMenuSmashCod() {
     Object.entries(bebidasCod).forEach(([cod, data]) => {
         menu += `- *${cod}*: ${data.nombre}  $${data.precio}\n`;
     });
-    menu += '\n_*Responde con la cantidad y el código del producto que quieres (Ejemplo: 2 HB1 - para smash burger)*_';
+    menu += '\nℹ️ Responde con la cantidad y el código del producto que quieres. *‼️ Un producto a la vez.*\n\nEjemplo: 2 HB1 - para smash burger';
     return menu;
 }
 
@@ -603,7 +603,7 @@ const listenMessage = () => {
                     sabores = codigos.map(c => catalogoSaboresCod[c]);
                 }
                 if (!validos) {
-                    sendMessage(from, `ℹ️ Debes indicar exactamente ${cantidad} códigos, separados por coma. Opciones:\n${menuSabores}`);
+                    sendMessage(from, `ℹ️ Debes indicar exactamente solo ${cantidad} sabores, separados por coma. Opciones:\n${menuSabores}`);
                     return;
                 }
             }
@@ -622,7 +622,7 @@ const listenMessage = () => {
             return;
         }
 
-        const saludos = ['hola', 'hola buenas noches','hola buenos dias','hola buenas tardes', 'buenas noches', 'buenas tardes', 'buenos dias', 'hey', 'hi', 'hello'];
+        const saludos = ['hola', 'hola buenas noches','hola buenos dias','hola buenos días','hola buenas tardes', 'buenas noches', 'buenas tardes', 'buenos dias', 'buenos días', 'hey', 'hi', 'hello'];
         if (saludos.includes(texto)) {
             /* sendMedia(
                 from, 'logo1.jpg',
@@ -652,8 +652,9 @@ const listenMessage = () => {
                 pedidos[from] = pedidos[from] || [];
                 sendMedia(from, 
                 'arepazo.png', 
-                getMenuArepazoCod() + 
-                '\n\n_*Responde con la cantidad y el código del producto que quieres (Ejemplo: 2 MA1 - para 2 arepas mixta 2 sabores). Todas las unidades seran del mismo sabor que selecciones a continuacion.*_');
+                getMenuArepazoCod());
+                setTimeout(()=> {
+                    sendMessage( from, 'ℹ️ Responde con la cantidad y el código del producto que quieres.\n‼️ *Un producto a la vez*. \n\nEjemplo: 2 MA1 - para 2 ordenar arepas mixta 2 sabores.\n\n‼️ Ten en cuenta que la cantida de arepas indicadas seran todas del mismo sabor a escojer a continuacion.' )},1300)
                 break;
             case 'hamburguesas':
             case 'burger':
@@ -663,7 +664,7 @@ const listenMessage = () => {
                     from,
                     'smash.png',
                     getMenuSmashCod() + 
-                    '\n\nLuego de elegir la hamburguesa o nuggets, te preguntaremos como lo quieres: solo (S), con papas (P) o en combo (C).'
+                    '\n\nℹ️ Luego de elegir la hamburguesa o nuggets, te preguntaremos como lo quieres: solo (S), con papas (P) o en combo (C).'
                 );
                 break;
             case 'ver':
@@ -861,7 +862,7 @@ const listenMessage = () => {
                             if (matchCodigoArepa.nombre.includes('mariscos')) {
                             sendMessage(from, `Indica 1 código de cada menú, separados por coma.\nSabores normales:\n${menuSabores}\nSabores mar:\n${menuSaboresMar}`);
                             } else {
-                                sendMessage(from, `*Sabores:*\n${menuSabores}\n\n_*Responde solo con los códigos exactos de los sabores separados por coma. (Ejemplo: SA1, SA7 - para pollo, tocineta )*_`);
+                                sendMessage(from, `*Sabores:*\n${menuSabores}\n\nℹ️ Responde solo con los códigos exactos de los sabores separados por coma.\n‼️ *Solo 2 sabores.*\n\nEjemplo: SA1, SA7 - para ordenar arepa con  pollo, tocineta.`);
                             }
                         })
                         return;
@@ -1036,7 +1037,7 @@ const listenMessage = () => {
                         pedidos[from].push(producto);
                         sendMessage(
                             from,
-                            `🛵 Gracias por compartir tu zona de entrega.\n\nEscribe _*M*_ para enviarte el menú y tomar tu pedido.`
+                            `🛵 Gracias por compartir tu zona de entrega.\n\nEscribe *V* para ver tu pedido ó *M* para enviarte el menú si aun no haz pedido.`
                         );
                     }
                     return;
