@@ -244,7 +244,9 @@ const menuDelivery =
 - *ZD17*: Guanta $3
 - *ZD18*: El rincon $5
 - *ZD19*: San diego $5
-- *ZD20*: Areopuerto $5`;
+- *ZD20*: Areopuerto $5
+- *RT*: Retiro en tienda`;
+
 
 const hamburguesasCod = {
     'HB1': { nombre: 'Smash burger', descripcion: 'Pan de batata, carne smash, queso, ketchup y mayonesa', precios: { S: 3, P: 4, C: 5.5 } },
@@ -316,7 +318,8 @@ const zonaDeliveryCod = {
     'ZD17': { nombre: 'Guanta', precio: 3 },
     'ZD18': { nombre: 'El rincon', precio: 5 },
     'ZD19': { nombre: 'San diego', precio: 5 },
-    'ZD20': { nombre: 'Areopuerto', precio: 5 }
+    'ZD20': { nombre: 'Areopuerto', precio: 5 },
+    'RT': { nombre: 'Retiro en tienda', precio: 0 }
 };
 
 function getMenuSmashCod() {
@@ -808,7 +811,7 @@ const listenMessage = () => {
                 break;
             //opciones de configiracion admin
             case 'tasa':
-                if (from === numeroAutorizado) {
+                if (numeroAutorizado.includes(from)) {
                     actualizarTasa();
                     sendMessage(from, '✅ Tasa dolar actualizada correctamnete Bs.' +tasaActual);
                 } else {
@@ -817,7 +820,7 @@ const listenMessage = () => {
                 break;
             case 'sabores':
                 cargarSaboresDesdeBD(()=>{
-                            if (from === numeroAutorizado) {
+                            if (numeroAutorizado.includes(from)) {
                             sendMessage(from, `✅ Sabores actualizados`);
                             } else {
                                 sendMessage(from, `⚠️ No podemos entender tu orden`);
