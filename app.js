@@ -67,8 +67,11 @@ function actualizarTasa() {
 actualizarTasa();
 
 // Programar para que se ejecute todos los días a las 12:00 am
-cron.schedule('20 0 * * *', () => {
+cron.schedule('0 4 * * *', () => {
     actualizarTasa();
+    numeroAutorizado.forEach(num => {
+        sendMessage(num, `✅ Tasa actualizada: Bs. ${tasaActual}` );
+    })
 });
 
 // Traer los sabores disponibles de BD para las arepas
@@ -218,7 +221,7 @@ const seleccionSabores = {};
 const pedidoTimeouts = {};
 const datosRecepcion = {};
 const telefonoATC = '0414-3354594';
-const numeroAutorizado = ['584129326767@c.us', '584149071774@c.us' ];
+const numeroAutorizado = ['584129326767@c.us', '584149071774@c.us', '584242320885@c.us', '584142604666@c.us' ];
 const fecha = new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString().replace('T', ' ').replace('Z', '');
 
 // Catálogos SOLO por código
