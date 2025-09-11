@@ -272,12 +272,14 @@ const papasCod = {
 };
 
 const bebidasCod = {
-    'BE1': { nombre: 'Refresco de lata', precio: 1.5 },
-    'BE2': { nombre: 'Lipton 500ml', precio: 2 },
-    'BE3': { nombre: 'Agua 355ml', precio: 1 },
-    'BE4': { nombre: 'Refresco 1LT', precio: 2 },
-    'BE5': { nombre: 'Refresco 1 1/2 LT', precio: 2.5 },
-    /* 'BE6': { nombre: 'Refresco 2 LT', precio: 3 } */
+    'BE1': { nombre: 'Refresco de lata', precio: 2 },
+    'BE2': { nombre: 'Lipton 500ml', precio: 2.5 },
+    'BE3': { nombre: 'Agua 355ml', precio: 1.5 },
+    'BE4': { nombre: 'Refresco 1LT', precio: 2.5 },
+    'BE5': { nombre: 'Refresco 1 1/2 LT', precio: 3 },
+    'BE6': { nombre: 'Gatorade', precio: 2.5 },
+    'BE7': { nombre: 'Malta de lata', precio: 2},
+    'BE8': { nombre: 'Malta de botella', precio: 1.5}
 };
 
 const variantesBurger = {
