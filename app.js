@@ -622,12 +622,21 @@ const listenMessage = () => {
             return;
         }
 
-        const saludos = ['hola', 'hola buenas noches','hola buenos dias','hola buenos días','hola buenas tardes', 'buenas noches', 'buenas tardes', 'buenos dias', 'buenos días', 'hey', 'hi', 'hello'];
-        if (saludos.includes(texto)) {
-            /* sendMedia(
-                from, 'logo1.jpg',
-                '*Hola Bienvenido a:*\n\n *EL Arepazo*🫓 y\n *Smash Rico*🍔\n\nEscribe _*DELIVERY ó D*_ para conocer tu zona de entrega.'
-            ); */
+        const saludos = ['hola',
+            'holaa', 
+            'hola buenas noches',
+            'hola buenos dias',
+            'hola buenos días',
+            'hola buenas tardes', 
+            'buenas noches', 
+            'buenas tardes', 
+            'buenos dias', 
+            'buenos días', 
+            'dia', 
+            'día',
+            'tarde',
+            'noche'];
+        if (saludos.some(saludo => texto.includes(saludo))) {
            sendMedia(
                 from, 'logo1.jpg', 
                 '👋 ¡Hola! Bienvenido al sistema de pedidos automático 🛒\n\nEstás interactuando con un bot 🤖, así que por favor sigue las instrucciones con atención para que tu pedido se procese correctamente.\n\nPara empezar escribe *Delivery ó D*'
@@ -1043,7 +1052,7 @@ const listenMessage = () => {
                     return;
                 }
 
-                sendMessage(from, '🤖 ¡Hola! Estás interactuando con un bot automatizado.\n\nNo pudimos entender tu mensaje.\n\n‼️ Por favor, asegúrate de escribir el comando indicado correctamente si estas en el curso de un pedido.\n\nℹ️ Si no haz comenzado tu pedido, escribe *D* y sigue las instrucciones paso a paso.');
+                sendMessage(from, '🤖 ¡Hola! Estás interactuando con un bot automatizado.\n\nNo pudimos entender tu mensaje.\n\n‼️ Por favor, asegúrate de escribir el comando indicado en el mensaje anterior correctamente si estas en el curso de un pedido.\n\nℹ️ Si no haz comenzado tu pedido, escribe *D* y sigue las instrucciones paso a paso.');
         }
     });
 };
