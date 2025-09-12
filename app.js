@@ -299,7 +299,12 @@ const variantesBurger = {
 const arepasCod = {
     'MA1': { nombre: 'Arepa mixta 2 sabores', precio: 4 },
     'MA2': { nombre: 'Arepa mixta 2 sabores con mariscos', precio: 4.5 },
-    'MA3': { nombre:'Viuda', precio: 1 },
+    'MA3': { nombre: 'Pelua: mechada y amarillo', precio: 4},
+    'MA4': { nombre: 'Catira: pollo y amarillo', precio: 4},
+    'MA5': { nombre: 'Sifrina: reina y amarillo', precio: 4},
+    'MA6': { nombre: 'Rumbera: pernil y amarillo', precio: 4},
+    'MA7': { nombre: 'Huevo peluo: mechada, amarillo y h. codorniz', precio: 5.5},
+    'MA8': { nombre:'Viuda', precio: 1 },
     'PAN': { nombre: '😋 Pabellonazo: El as de la arepa P.A.N', precio: 3.5}
 };
 
@@ -352,7 +357,7 @@ function getMenuSmashCod() {
 }
 
 function getMenuArepazoCod() {
-    let menu = '\n\n🫓 *Arepas*\n';
+    menu = '\n\n🫓 *Arepas*\n';
     Object.entries(arepasCod).forEach(([cod, data]) => {
         menu += `- *${cod}*: ${data.nombre}  $${data.precio}\n`;
     });
