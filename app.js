@@ -299,7 +299,8 @@ const variantesBurger = {
 const arepasCod = {
     'MA1': { nombre: 'Arepa mixta 2 sabores', precio: 4 },
     'MA2': { nombre: 'Arepa mixta 2 sabores con mariscos', precio: 4.5 },
-    'MA3': { nombre:'Viuda', precio: 1 }
+    'MA3': { nombre:'Viuda', precio: 1 },
+    'PAN': { nombre: '😋 Pabellonazo: El as de la arepa P.A.N', precio: 3.5}
 };
 
 // Códigos para zonas de delivery
