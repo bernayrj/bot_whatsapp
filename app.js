@@ -223,6 +223,8 @@ const datosRecepcion = {};
 const telefonoATC = '0414-3354594';
 const numeroAutorizado = ['584129326767@c.us', '584149071774@c.us', '584242320885@c.us', '584142604666@c.us' ];
 const fecha = new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString().replace('T', ' ').replace('Z', '');
+const erroresUsuario = {}; // Lleva el conteo de errores por usuario
+const LIMITE_ERRORES = 5;
 
 // Catálogos SOLO por código
 
@@ -606,7 +608,7 @@ const listenMessage = () => {
                     sabores = codigos.map(c => catalogoSaboresCod[c]);
                 }
                 if (!validos) {
-                    sendMessage(from, `ℹ️ Debes indicar exactamente solo ${cantidad} sabores, separados por coma. Opciones:\n${menuSabores}`);
+                    sendMessage(from, `‼️ Debes indicar exactamente solo ${cantidad} sabores, separados por coma. Opciones:\n${menuSabores}`);
                     return;
                 }
             }
@@ -1055,6 +1057,13 @@ const listenMessage = () => {
                     return;
                 }
 
+                // Si llega aquí, no entendió el mensaje BRUTO
+                erroresUsuario[from] = (erroresUsuario[from] || 0) + 1;
+                if (erroresUsuario[from] >= LIMITE_ERRORES) {
+                sendMessage(from, `¿Necesitas ayuda? Puedes comunicarte con soporte al: ${telefonoATC} (solo Whatsapp)`);
+                erroresUsuario[from] = 0; // Reinicia el contador tras mostrar el mensaje de soporte
+                return;
+                }
                 sendMessage(from, '🤖 ¡Hola! Estás interactuando con un bot automatizado.\n\nNo pudimos entender tu mensaje.\n\n‼️ Por favor, asegúrate de escribir el comando indicado en el mensaje anterior correctamente si estas en el curso de un pedido.\n\nℹ️ Si no haz comenzado tu pedido, escribe *D* y sigue las instrucciones paso a paso.');
         }
     });
