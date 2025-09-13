@@ -687,7 +687,7 @@ const listenMessage = () => {
                     '\n\nℹ️ Luego de elegir la hamburguesa o nuggets, te preguntaremos como lo quieres: solo (S), con papas (P) o en combo (C).' */
                 );
                 setTimeout(()=> {
-                    sendMessage( from, 'ℹ️ Responde con la cantidad y el código del producto que quieres agregar al pedido.\n\nEjemplo: *2 HB1* - para ordenar 2 smash burger. ✅\n\n\ℹ️ Debes agregra un solo producto por mensaje.\n\nSi envias: *2 HB1, PA2* - No entedere. ❌\n\nℹ️ Luego de elegir la hamburguesa o nuggets, elegiras como lo quieres: solo, con papas o en combo y te mostrare los precios.')},1300)
+                    sendMessage( from, 'ℹ️ Responde con la cantidad y el código del producto que quieres agregar al pedido.\n\nEjemplo: *2 HB1* - para ordenar 2 smash burger. ✅\n\n\ℹ️ Debes agregra un solo producto por mensaje.\n\nSi envias: *2 HB1, PA2* - No entedere. ❌\n\nℹ️ Luego de elegir la hamburguesa o nuggets, elegiras como lo quieres: solo, con papas o en combo y te mostrare los precios.')},3000)
                 break;
             case 'ver':
             case 'v':
