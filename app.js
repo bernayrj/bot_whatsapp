@@ -373,6 +373,7 @@ function getMenuArepazoCod() {
 const listenMessage = () => {
     client.on('message', (msg) => {
         const { from, body } = msg;
+        if (!body || !body.trim()) return;
         if (from === 'status@broadcast') return;
         const texto = body.toLowerCase().trim();
         console.log(`[${from}] Cliente: ${body}`);
