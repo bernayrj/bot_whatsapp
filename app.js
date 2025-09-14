@@ -17,7 +17,9 @@ const db = mysql.createPool({
     database: process.env.DB_DATABASE,
     waitForConnections: true,
     connectionLimit: 10,
-    queueLimit: 0
+    queueLimit: 0,
+    connectTimeout: 5000,
+    idleTimeout: 60000
 });
 
 // Validar conexión a la BD
@@ -373,7 +375,8 @@ function getMenuArepazoCod() {
 const listenMessage = () => {
     client.on('message', (msg) => {
         const { from, body } = msg;
-        if (!body || !body.trim()) return;
+        /* if (!body || !body.trim()) return; */
+        if (!msg.hasMedia && (!body || !body.trim())) return;
         if (from === 'status@broadcast') return;
         const texto = body.toLowerCase().trim();
         console.log(`[${from}] Cliente: ${body}`);
@@ -448,6 +451,7 @@ const listenMessage = () => {
         // === BLOQUE PARA RECIBIR Y GUARDAR IMAGEN DE PAGO MOVIL O EFECTIVO ===
         if (msg.hasMedia) {
             if (
+                console.log(msg.media),
                 typeof ultimoPedido !== 'undefined' &&
                 ultimoPedido[from]
             ) {
