@@ -679,7 +679,7 @@ const listenMessage = () => {
                 'arepazo.png', 
                 getMenuArepazoCod());
                 setTimeout(()=> {
-                    sendMessage( from, 'ℹ️ Responde con la cantidad y el código del producto que quieres agregar al pedido.\n\nEjemplo: *2 MA1* - para ordenar 2 arepas mixta 2 sabores. ✅\n\nℹ️ Debes agregar un solo producto por mensaje.\n\nSi envias: 2 MA1, 3 MA2, BE3 - No entendere. ❌\n\nℹ️ Ten en cuenta que los sabores seleccionados a continuacion, aplicaran a la cantidad de arepas indicadas' )},1300)
+                    sendMessage( from, 'ℹ️ Responde con la cantidad y el código del producto que quieres agregar al pedido.\n\nEjemplo: *2 MA1* - para ordenar 2 arepas mixta 2 sabores. ✅\n\nℹ️ Debes agregar un solo producto por mensaje.\n\nSi envias: 2 MA1, 3 MA2, BE3 - No entendere. ❌\n\nℹ️ Ten en cuenta que los sabores seleccionados a continuacion, aplicaran a la cantidad de arepas indicadas' )},2000)
                 break;
             case 'hamburguesas':
             case 'burger':
@@ -692,7 +692,7 @@ const listenMessage = () => {
                     '\n\nℹ️ Luego de elegir la hamburguesa o nuggets, te preguntaremos como lo quieres: solo (S), con papas (P) o en combo (C).' */
                 );
                 setTimeout(()=> {
-                    sendMessage( from, 'ℹ️ Responde con la cantidad y el código del producto que quieres agregar al pedido.\n\nEjemplo: *2 HB1* - para ordenar 2 smash burger. ✅\n\n\ℹ️ Debes agregra un solo producto por mensaje.\n\nSi envias: *2 HB1, PA2* - No entedere. ❌\n\nℹ️ Luego de elegir la hamburguesa o nuggets, elegiras como lo quieres: solo, con papas o en combo y te mostrare los precios.')},3000)
+                    sendMessage( from, 'ℹ️ Responde con la cantidad y el código del producto que quieres agregar al pedido.\n\nEjemplo: *2 HB1* - para ordenar 2 smash burger. ✅\n\n\ℹ️ Debes agregra un solo producto por mensaje.\n\nSi envias: *2 HB1, PA2* - No entedere. ❌\n\nℹ️ Luego de elegir la hamburguesa o nuggets, elegiras como lo quieres: solo, con papas o en combo y te mostrare los precios.')},5000)
                 break;
             case 'ver':
             case 'v':
