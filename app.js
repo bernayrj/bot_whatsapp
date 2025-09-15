@@ -619,7 +619,7 @@ const listenMessage = () => {
                     sabores = codigos.map(c => catalogoSaboresCod[c]);
                 }
                 if (!validos) {
-                    sendMessage(from, `‼️ Debes indicar exactamente solo ${cantidad} sabores, separados por coma. Opciones:\n${menuSabores}`);
+                    sendMessage(from, `‼️ Debes indicar exactamente solo ${cantidad} sabores disponibles, separados por coma. Opciones:\n${menuSabores}ℹ️ Responde solo con el código exacto de los sabores que deseas separados por coma.\n\nEjemplo: *SA1, SA7* - para ordenar una arepa con pollo y tocineta. ✅\n\nℹ️ Si envias, más de 2 sabores: SA1, SA7, SA5 - No entendere. ❌`);
                     return;
                 }
             }
@@ -633,7 +633,7 @@ const listenMessage = () => {
             iniciarTimeoutPedido(from);
             sendMessage(
                 from,
-                `✅ Hemos agregado: ${productoAgregado.cantidad} x ${productoAgregado.item} con sabores: ${sabores.join(', ')}\n\nℹ️ Puedes seguir agregando productos del menú.\n\nSi tu pedido esta completo, escribe *V* para verlo.`
+                `✅ Hemos agregado: ${productoAgregado.cantidad} x ${productoAgregado.item} con sabores: ${sabores.join(', ')}\n\nPuedes seguir agregando productos de nuestros menú.\n\nℹ️Escribe *A* para menú de arepas.\n\nℹ️Escribe *B* para menú de hamburguesas.\n\nℹ️ Si tu pedido esta completo, escribe *V* para verlo.`
             );
             return;
         }
@@ -904,7 +904,7 @@ const listenMessage = () => {
                         pedidos[from] = pedidos[from] || [];
                         pedidos[from].push(producto);
                         iniciarTimeoutPedido(from);
-                        sendMessage(from, `✅ Hemos agregado: ${producto.cantidad} x ${producto.item} ($${producto.precio} c/u) = $${producto.subtotal}\n\nℹ️ Puedes seguir agregando productos del menú.\n\nSi tu pedido esta completo, escribe *V* para verlo.`);
+                        sendMessage(from, `✅ Hemos agregado: ${producto.cantidad} x ${producto.item} ($${producto.precio} c/u) = $${producto.subtotal}\n\nPuedes seguir agregando productos de nuestros menú.\n\nℹ️Escribe *A* para menú de arepas.\n\nℹ️Escribe *B* para menú de hamburguesas.\n\nℹ️ Si tu pedido esta completo, escribe *V* para verlo.`);
                         return;
                     }
                 }
@@ -943,7 +943,7 @@ const listenMessage = () => {
                         iniciarTimeoutPedido(from);
                         sendMessage(
                             from,
-                            `✅ Hemos agregado: ${producto.cantidad} x ${producto.item} ($${producto.precio} c/u) = $${producto.subtotal}\n\nℹ️ Puedes seguir agregando productos del menú.\n\nSi tu pedido esta completo, escribe *V* para verlo.`
+                            `✅ Hemos agregado: ${producto.cantidad} x ${producto.item} ($${producto.precio} c/u) = $${producto.subtotal}\n\nPuedes seguir agregando productos de nuestros menú.\n\nℹ️Escribe *A* para menú de arepas.\n\nℹ️Escribe *B* para menú de hamburguesas.\n\nℹ️ Si tu pedido esta completo, escribe *V* para verlo.`
                         );
                     } else {
                         sendMessage(from, '⚠️ Opción inválida.\n\nℹ️ Responde con las opciones indicadas.\n\nEjemplo: *S* - para hambuerguesa sola ó *C* - para hamburguesa en combo.');
@@ -1005,7 +1005,7 @@ const listenMessage = () => {
                     pedidos[from] = pedidos[from] || [];
                     pedidos[from].push(producto);
                     iniciarTimeoutPedido(from);
-                    sendMessage(from, `✅ Hemos agregado: ${producto.cantidad} x ${producto.item} ($${producto.precio} c/u) = $${producto.subtotal}\n\nℹ️ Puedes seguir agregando productos del menú.\n\nSi tu pedido esta completo, escribe *V* para verlo.`);
+                    sendMessage(from, `✅ Hemos agregado: ${producto.cantidad} x ${producto.item} ($${producto.precio} c/u) = $${producto.subtotal}\n\nPuedes seguir agregando productos de nuestros menú.\n\nℹ️Escribe *A* para menú de arepas.\n\nℹ️Escribe *B* para menú de hamburguesas.\n\nℹ️ Si tu pedido esta completo, escribe *V* para verlo.`);
                     return;
                 }
 
@@ -1042,7 +1042,7 @@ const listenMessage = () => {
                     pedidos[from] = pedidos[from] || [];
                     pedidos[from].push(producto);
                     iniciarTimeoutPedido(from);
-                    sendMessage(from, `✅ Hemos agregado: ${producto.cantidad} x ${producto.item} ($${producto.precio} c/u) = $${producto.subtotal}\n\nℹ️ Puedes seguir agregando productos del menú.\n\nSi tu pedido esta completo, escribe *V* para verlo.`);
+                    sendMessage(from, `✅ Hemos agregado: ${producto.cantidad} x ${producto.item} ($${producto.precio} c/u) = $${producto.subtotal}\n\nPuedes seguir agregando productos de nuestros menú.\n\nℹ️Escribe *A* para menú de arepas.\n\nℹ️Escribe *B* para menú de hamburguesas.\n\nℹ️ Si tu pedido esta completo, escribe *V* para verlo.`);
                     return;
                 }
                     }
