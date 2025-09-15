@@ -303,7 +303,7 @@ const arepasCod = {
     'MA2': { nombre: 'Arepa mixta 2 sabores con mariscos', precio: 4.5 },
     'MA3': { nombre: 'Pelua: mechada y amarillo', precio: 4},
     'MA4': { nombre: 'Catira: pollo y amarillo', precio: 4},
-    'MA5': { nombre: 'Sifrina: reina y amarillo', precio: 4},
+    /* 'MA5': { nombre: 'Sifrina: reina y amarillo', precio: 4}, */
     'MA6': { nombre: 'Rumbera: pernil y amarillo', precio: 4},
     'MA7': { nombre: 'Huevo peluo: mechada, amarillo y h. codorniz', precio: 5.5},
     'MA8': { nombre:'Viuda', precio: 1 },
