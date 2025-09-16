@@ -45,6 +45,9 @@ let menuSaboresRefresco = '';
 let menuSaboresLipton = '';
 let LOG_CONVERSACIONES = true;
 let tasaActual = null;
+let arepasCod = {};
+let menuArepazo = '';
+let client;
 
 // Permitir activar/desactivar log desde WhatsApp (solo número autorizado)
 function toggleLogConversaciones(activar) {
@@ -67,6 +70,8 @@ function actualizarTasa() {
 
 // Ejecutar una vez al iniciar el bot
 actualizarTasa();
+// Al iniciar el bot, carga el menú de arepas
+cargarMenuArepazoDesdeBD();
 
 // Programar para que se ejecute todos los días a las 12:00 am
 cron.schedule('0 4 * * *', () => {
@@ -119,8 +124,43 @@ function cargarSaboresDesdeBD(callback) {
     
 }
 
+// Función para cargar menú de arepas y bebidas desde BD
+function cargarMenuArepazoDesdeBD(callback) {
+    db.query('CALL get_menu_arepazo()', (err, results) => {
+        if (err) {
+            console.error('Error al obtener menú de arepas:', err);
+            return;
+        }
+        arepasCod = {};
+        bebidasCod = {};
+        results[0].forEach(row => {
+            if (row.categoria === 'arepas') {
+                arepasCod[row.codigo] = {
+                    nombre: row.nombre,
+                    categoria: row.categoria,
+                    precio: row.precio
+                };
+            } else if (row.categoria === 'bebidas') {
+                bebidasCod[row.codigo] = {
+                    nombre: row.nombre,
+                    categoria: row.categoria,
+                    precio: row.precio
+                };
+            }
+        });
+        // Actualiza menú de texto
+        menuArepazo = '\n\n🫓 *Arepas*\n' +
+            Object.entries(arepasCod).map(([cod, data]) =>
+                `- *${cod}*: ${data.nombre}  $${data.precio}\n`
+            ).join('') +
+            '\n\n🥤 *Bebidas*\n' +
+            Object.entries(bebidasCod).map(([cod, data]) =>
+                `- *${cod}*: ${data.nombre}  $${data.precio}\n`
+            ).join('');
+        if (callback) callback();
+    });
+}
 
-let client;
 
 // Helper: Delete a folder recursively
 function deleteFolderRecursive(folderPath) {
@@ -280,16 +320,6 @@ const papasCod = {
     'PA3': { nombre: 'Canoa papas queso y tocineta', precio: 3.5 }
 };
 
-const bebidasCod = {
-    'BE1': { nombre: 'Refresco de lata', precio: 2 },
-    'BE2': { nombre: 'Lipton 500ml', precio: 2.5 },
-    'BE3': { nombre: 'Agua 355ml', precio: 1.5 },
-    'BE4': { nombre: 'Refresco 1LT', precio: 2.5 },
-    'BE5': { nombre: 'Refresco 1 1/2 LT', precio: 3 },
-    'BE6': { nombre: 'Gatorade', precio: 2.5 },
-    'BE7': { nombre: 'Malta de lata', precio: 2},
-    'BE8': { nombre: 'Malta de botella', precio: 1.5}
-};
 
 const variantesBurger = {
     'S': 'Sola',
@@ -297,18 +327,6 @@ const variantesBurger = {
     'C': 'En combo'
 };
 
-// Códigos para productos Arepas
-const arepasCod = {
-    'MA1': { nombre: 'Arepa mixta 2 sabores', precio: 4 },
-    'MA2': { nombre: 'Arepa mixta 2 sabores con mariscos', precio: 4.5 },
-    'MA3': { nombre: 'Pelua: mechada y amarillo', precio: 4},
-    'MA4': { nombre: 'Catira: pollo y amarillo', precio: 4},
-    /* 'MA5': { nombre: 'Sifrina: reina y amarillo', precio: 4}, */
-    'MA6': { nombre: 'Rumbera: pernil y amarillo', precio: 4},
-    'MA7': { nombre: 'Huevo peluo: mechada, amarillo y h. codorniz', precio: 5.5},
-    'MA8': { nombre:'Viuda', precio: 1 },
-    'PAN': { nombre: '😋 Pabellonazo: El as de la arepa P.A.N', precio: 3.5}
-};
 
 // Códigos para zonas de delivery
 const zonaDeliveryCod = {
@@ -485,7 +503,7 @@ const listenMessage = () => {
                                         ordenNum = results[0][0]?.orden || null;
                                         sendMessage(from, 'Perfecto, tu pago móvil ha sido registrado para su validacion. En breve nuestro equipo se comunicará contigo para coordinar la entrega.\n\n'+ nombreCliente + ', tu orden es: '+ ordenNum );
                                         setTimeout(()=> {
-                                            sendMessage( from, 'Comunicate con soporte al: '+telefonoATC +' en caso de incidencia con tu pedido. (solo Whatsapp)' )},1000)
+                                            sendMessage( from, 'En caso de tener algun inconveniente con tu pedido. Comunicate con soporte al: '+telefonoATC +' (solo Whatsapp).' )},1000)
                                         broadcastNewOrder();
                                     }
                                 });
@@ -675,12 +693,20 @@ const listenMessage = () => {
             case 'arepas':
             case 'a':
                 pedidos[from] = pedidos[from] || [];
+                cargarMenuArepazoDesdeBD(() => {
+                sendMedia(from, 'arepazo.png', getMenuArepazoCod());
+                setTimeout(() => {
+                sendMessage(from, 'ℹ️ Responde con la cantidad y el código del producto que quieres agregar al pedido.\n\nEjemplo: *2 MA1* - para ordenar 2 arepas mixta 2 sabores. ✅\n\nℹ️ Debes agregar un solo producto por mensaje.\n\nSi envias: 2 MA1, 3 MA2, BE3 - No entendere. ❌\n\nℹ️ Ten en cuenta que los sabores seleccionados a continuacion, aplicaran a la cantidad de arepas indicadas');
+                }, 2000);
+               });
+           break;
+                 /* pedidos[from] = pedidos[from] || [];
                 sendMedia(from, 
                 'arepazo.png', 
                 getMenuArepazoCod());
                 setTimeout(()=> {
                     sendMessage( from, 'ℹ️ Responde con la cantidad y el código del producto que quieres agregar al pedido.\n\nEjemplo: *2 MA1* - para ordenar 2 arepas mixta 2 sabores. ✅\n\nℹ️ Debes agregar un solo producto por mensaje.\n\nSi envias: 2 MA1, 3 MA2, BE3 - No entendere. ❌\n\nℹ️ Ten en cuenta que los sabores seleccionados a continuacion, aplicaran a la cantidad de arepas indicadas' )},2000)
-                break;
+                break;  */
             case 'hamburguesas':
             case 'burger':
             case 'b':
@@ -1073,7 +1099,7 @@ const listenMessage = () => {
                 // Si llega aquí, no entendió el mensaje BRUTO
                 erroresUsuario[from] = (erroresUsuario[from] || 0) + 1;
                 if (erroresUsuario[from] >= LIMITE_ERRORES) {
-                sendMessage(from, `¿Necesitas ayuda? Puedes comunicarte con soporte al: ${telefonoATC} (solo Whatsapp)`);
+                sendMessage(from, `¿Necesitas ayuda? Puedes comunicarte con soporte al: ${telefonoATC} (solo Whatsapp).`);
                 erroresUsuario[from] = 0; // Reinicia el contador tras mostrar el mensaje de soporte
                 return;
                 }
