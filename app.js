@@ -287,11 +287,12 @@ const menuDelivery =
 - *ZD13*: Cerro el morro $2
 - *ZD14*: Intercomunal $3
 - *ZD15*: Barcelona $3
-- *ZD16*: Puerto la cruz $3
-- *ZD17*: Guanta $3
-- *ZD18*: El rincon $5
-- *ZD19*: San diego $5
-- *ZD20*: Areopuerto $5
+- *ZD16*: Nueva barcelona $3
+- *ZD17*: Puerto la cruz $3
+- *ZD18*: Guanta $3
+- *ZD19*: El rincon $5
+- *ZD20*: San diego $5
+- *ZD21*: Areopuerto $5
 - *RT*: Retiro en tienda`;
 
 
