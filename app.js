@@ -74,7 +74,7 @@ actualizarTasa();
 cargarMenuArepazoDesdeBD();
 
 // Programar para que se ejecute todos los días a las 12:00 am
-cron.schedule('0 4 * * *', () => {
+cron.schedule('0 0 * * *', () => {
     actualizarTasa();
     numeroAutorizado.forEach(num => {
         sendMessage(num, `✅ Tasa actualizada: Bs. ${tasaActual}` );
@@ -264,7 +264,7 @@ const pedidoTimeouts = {};
 const datosRecepcion = {};
 const telefonoATC = '0414-3354594';
 const numeroAutorizado = ['584129326767@c.us', '584149071774@c.us', '584242320885@c.us', '584142604666@c.us' ];
-const fecha = new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString().replace('T', ' ').replace('Z', '');
+/* const fecha = new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString().replace('T', ' ').replace('Z', ''); */
 const erroresUsuario = {}; // Lleva el conteo de errores por usuario
 const LIMITE_ERRORES = 5;
 
