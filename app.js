@@ -44,10 +44,17 @@ let menuSaboresMar = '';
 let menuSaboresRefresco = '';
 let menuSaboresLipton = '';
 let LOG_CONVERSACIONES = true;
-let tasaActual = null;
+let tasaActual = '';
 let arepasCod = {};
 let menuArepazo = '';
 let client;
+
+// Ejecutar una vez al iniciar el bot
+actualizarTasa();
+// Al iniciar el bot, carga el menú de arepas
+cargarMenuArepazoDesdeBD();
+// Al iniciar el bot cargar zonas delivery
+cargarZonasDelivery();
 
 // Permitir activar/desactivar log desde WhatsApp (solo número autorizado)
 function toggleLogConversaciones(activar) {
@@ -68,10 +75,7 @@ function actualizarTasa() {
     });
 }
 
-// Ejecutar una vez al iniciar el bot
-actualizarTasa();
-// Al iniciar el bot, carga el menú de arepas
-cargarMenuArepazoDesdeBD();
+
 
 // Programar para que se ejecute todos los días a las 12:00 am
 cron.schedule('0 0 * * *', () => {
@@ -161,6 +165,30 @@ function cargarMenuArepazoDesdeBD(callback) {
     });
 }
 
+//funcion para cargar zonas de  delivery desde BD 
+function cargarZonasDelivery(callback) {
+    db.query('CALL get_zonas ()', (err, results) => {
+        if (err) {
+            console.error('Error al obtener menú de arepas:', err);
+            return;
+        }
+        zonasCod = {};
+        results[0].forEach(row => {
+                zonasCod[row.codigo] = {
+                    codigo: row.codigo,
+                    nombre: row.nombre,
+                    precio: row.precio
+                };
+            
+        });
+        // Actualiza menú de texto
+        zonaDelivery = '🛵 *Delivery* 🛵\n' +
+            Object.entries(zonasCod).map(([cod, data]) =>
+                `- *${cod}*: ${data.nombre}  $${data.precio}\n`
+            ).join('');
+        if (callback) callback();
+    });
+}
 
 // Helper: Delete a folder recursively
 function deleteFolderRecursive(folderPath) {
@@ -263,38 +291,12 @@ const seleccionSabores = {};
 const pedidoTimeouts = {};
 const datosRecepcion = {};
 const telefonoATC = '0414-3354594';
-const numeroAutorizado = ['584129326767@c.us', '584149071774@c.us', '584242320885@c.us', '584142604666@c.us' ];
-/* const fecha = new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString().replace('T', ' ').replace('Z', ''); */
+const numeroAutorizado = ['584129326767@c.us', '584149071774@c.us' , '584242320885@c.us', '584142604666@c.us'];
 const erroresUsuario = {}; // Lleva el conteo de errores por usuario
 const LIMITE_ERRORES = 5;
 
+
 // Catálogos SOLO por código
-
-const menuDelivery =
-`🛵 *DELIVERY* 🛵
-- *ZD1*: Casco central $1
-- *ZD2*: Lecheria $2
-- *ZD3*: Doral beach $2
-- *ZD4*: Pueblo viejo $2
-- *ZD5*: Puerto morro: $2
-- *ZD6*: Caribean mall $2
-- *ZD7*: Venecia $2
-- *ZD8*: Costanera $2
-- *ZD9*: Las garzas $2
-- *ZD10*: Crucero $2
-- *ZD11*: Colinas de neveri $2
-- *ZD12*: Vistamar $2
-- *ZD13*: Cerro el morro $2
-- *ZD14*: Intercomunal $3
-- *ZD15*: Barcelona $3
-- *ZD16*: Nueva barcelona $3
-- *ZD17*: Puerto la cruz $3
-- *ZD18*: Guanta $3
-- *ZD19*: El rincon $5
-- *ZD20*: San diego $5
-- *ZD21*: Areopuerto $5
-- *RT*: Retiro en tienda`;
-
 
 const hamburguesasCod = {
     'HB1': { nombre: 'Smash burger', descripcion: 'Pan de batata, carne smash, queso, ketchup y mayonesa', precios: { S: 3, P: 4, C: 5.5 } },
@@ -328,32 +330,6 @@ const variantesBurger = {
     'C': 'En combo'
 };
 
-
-// Códigos para zonas de delivery
-const zonaDeliveryCod = {
-    'ZD1': { nombre: 'Casco central', precio: 1 },
-    'ZD2': { nombre: 'Lecheria', precio: 2 },
-    'ZD3': { nombre: 'Doral beach', precio: 2 },
-    'ZD4': { nombre: 'Pueblo viejo', precio: 2 },
-    'ZD5': { nombre: 'Puerto morro', precio: 2 },
-    'ZD6': { nombre: 'Caribean mall', precio: 2 },
-    'ZD7': { nombre: 'Venecia', precio: 2 },
-    'ZD8': { nombre: 'Costanera', precio: 2 },
-    'ZD9': { nombre: 'Las garazas', precio: 2 },
-    'ZD10': { nombre: 'Crucero', precio: 2 },
-    'ZD11': { nombre: 'Colinas del neveri', precio: 2 },
-    'ZD12': { nombre: 'Vistamar', precio: 2 },
-    'ZD13': { nombre: 'Cerro el morro', precio: 2 },
-    'ZD14': { nombre: 'Intercomunal', precio: 3 },
-    'ZD15': { nombre: 'Barcelona', precio: 3 },
-    'ZD16': { nombre: 'Puerto la cruz', precio: 3 },
-    'ZD17': { nombre: 'Guanta', precio: 3 },
-    'ZD18': { nombre: 'El rincon', precio: 5 },
-    'ZD19': { nombre: 'San diego', precio: 5 },
-    'ZD20': { nombre: 'Areopuerto', precio: 5 },
-    'RT': { nombre: 'Retiro en tienda', precio: 0 }
-};
-
 function getMenuSmashCod() {
     let menu = '\n\n🍔 *Hamburguesas*\n';
     Object.entries(hamburguesasCod).forEach(([cod, data]) => {
@@ -377,24 +353,10 @@ function getMenuSmashCod() {
     return menu;
 }
 
-function getMenuArepazoCod() {
-    menu = '\n\n🫓 *Arepas*\n';
-    Object.entries(arepasCod).forEach(([cod, data]) => {
-        menu += `- *${cod}*: ${data.nombre}  $${data.precio}\n`;
-    });
-    menu += '\n\n🥤 *Bebidas*\n'
-    Object.entries(bebidasCod).forEach(([cod, data]) => {
-        menu += `- *${cod}*: ${data.nombre}  $${data.precio}\n`;
-    });
-    return menu;
-}
-
-
 // --- Lógica de pedidos  por códigos ---
 const listenMessage = () => {
     client.on('message', (msg) => {
         const { from, body } = msg;
-        /* if (!body || !body.trim()) return; */
         if (!msg.hasMedia && (!body || !body.trim())) return;
         if (from === 'status@broadcast') return;
         const texto = body.toLowerCase().trim();
@@ -683,7 +645,9 @@ const listenMessage = () => {
             case 'delivery':
             case 'd':
                 pedidos[from] = pedidos[from] || [];
-                sendMessage(from, menuDelivery + '\n\nℹ️ Escribe solo el código de la zona de entrega de tu pedido.\n\nEjempo: *ZD2* - si tu zona de entrega es Lecheria');
+                cargarZonasDelivery( ()=> {
+                    sendMessage(from, zonaDelivery + '\n\nℹ️ Escribe solo el código de la zona de entrega de tu pedido.\n\nEjempo: *ZD2* - si tu zona de entrega es Lecheria')
+                } );
                 break;
             case 'menu':
             case 'menú':
@@ -695,19 +659,12 @@ const listenMessage = () => {
             case 'a':
                 pedidos[from] = pedidos[from] || [];
                 cargarMenuArepazoDesdeBD(() => {
-                sendMedia(from, 'arepazo.png', getMenuArepazoCod());
+                sendMedia(from, 'arepazo.png', menuArepazo);
                 setTimeout(() => {
                 sendMessage(from, 'ℹ️ Responde con la cantidad y el código del producto que quieres agregar al pedido.\n\nEjemplo: *2 MA1* - para ordenar 2 arepas mixta 2 sabores. ✅\n\nℹ️ Debes agregar un solo producto por mensaje.\n\nSi envias: 2 MA1, 3 MA2, BE3 - No entendere. ❌\n\nℹ️ Ten en cuenta que los sabores seleccionados a continuacion, aplicaran a la cantidad de arepas indicadas');
                 }, 2000);
                });
            break;
-                 /* pedidos[from] = pedidos[from] || [];
-                sendMedia(from, 
-                'arepazo.png', 
-                getMenuArepazoCod());
-                setTimeout(()=> {
-                    sendMessage( from, 'ℹ️ Responde con la cantidad y el código del producto que quieres agregar al pedido.\n\nEjemplo: *2 MA1* - para ordenar 2 arepas mixta 2 sabores. ✅\n\nℹ️ Debes agregar un solo producto por mensaje.\n\nSi envias: 2 MA1, 3 MA2, BE3 - No entendere. ❌\n\nℹ️ Ten en cuenta que los sabores seleccionados a continuacion, aplicaran a la cantidad de arepas indicadas' )},2000)
-                break;  */
             case 'hamburguesas':
             case 'burger':
             case 'b':
@@ -715,8 +672,7 @@ const listenMessage = () => {
                 sendMedia(
                     from,
                     'smash.png',
-                    getMenuSmashCod() /* + 
-                    '\n\nℹ️ Luego de elegir la hamburguesa o nuggets, te preguntaremos como lo quieres: solo (S), con papas (P) o en combo (C).' */
+                    getMenuSmashCod()
                 );
                 setTimeout(()=> {
                     sendMessage( from, 'ℹ️ Responde con la cantidad y el código del producto que quieres agregar al pedido.\n\nEjemplo: *2 HB1* - para ordenar 2 smash burger. ✅\n\n\ℹ️ Debes agregra un solo producto por mensaje.\n\nSi envias: *2 HB1, PA2* - No entedere. ❌\n\nℹ️ Luego de elegir la hamburguesa o nuggets, elegiras como lo quieres: solo, con papas o en combo y te mostrare los precios.')},5000)
@@ -794,7 +750,7 @@ const listenMessage = () => {
                         sendMessage(from, 'Indícanos tu nombre y apellido:');
                         delete pedidos[from];
                     } else {
-                        sendMessage(from, ' ⚠️No conocemos tu zona de entrega. Escribela para agregarla\n\n' + menuDelivery +'\n\nℹ️ Escribe solo el código de la zona de entrega de tu pedido.\n\nEjemplo: *ZD2* - si tu zona de entrea es Lecheria');
+                        sendMessage(from, ' ⚠️No conocemos tu zona de entrega. Escribela para agregarla\n\n' + zonaDelivery +'\n\nℹ️ Escribe solo el código de la zona de entrega de tu pedido.\n\nEjemplo: *ZD2* - si tu zona de entrea es Lecheria');
                     }
                 } else {
                     sendMessage(from, '⚠️ Aún no has agregado productos.\n\nℹ️Escribe *M* para enviarte el menú y comenzar a tomar tu pedido.');
@@ -1021,12 +977,12 @@ const listenMessage = () => {
                 } */
 
                 // Papas
-                const matchCodigoPapa = papasCod[texto.toUpperCase()];
+                const matchCodigoPapa = papasCod[nombreProducto.toUpperCase()];
                 if (matchCodigoPapa) {
                     const producto = {
                         item: matchCodigoPapa.nombre,
                         precio: matchCodigoPapa.precio,
-                        cantidad: 1,
+                        cantidad: cantidad,
                         subtotal: 1 * matchCodigoPapa.precio
                     };
                     pedidos[from] = pedidos[from] || [];
@@ -1075,7 +1031,7 @@ const listenMessage = () => {
                     }
 
                 // --- Lógica para zona de delivery por código ---
-                const matchCodigoDelivery = zonaDeliveryCod[texto.toUpperCase()];
+                const matchCodigoDelivery = zonasCod[texto.toUpperCase()];
                 if (matchCodigoDelivery) {
                     pedidos[from] = pedidos[from] || [];
                     const yaTieneDelivery = pedidos[from].some(p => p.item && p.item.startsWith('Delivery'));
