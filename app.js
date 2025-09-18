@@ -430,7 +430,7 @@ const listenMessage = () => {
         }
 
         // === BLOQUE PARA RECIBIR Y GUARDAR IMAGEN DE PAGO MOVIL O EFECTIVO ===
-        if (msg.hasMedia) {
+        /* if (msg.hasMedia) {
             if (
                 console.log(msg.media),
                 typeof ultimoPedido !== 'undefined' &&
@@ -523,7 +523,83 @@ const listenMessage = () => {
             // Si no está esperando ninguno, mensaje de error
             sendMessage(from, '⚠️ No podemos entender tu orden, valida que hayas escrito el comando indicado correctamente');
             return;
+        } */
+
+        // Bloque para recibir y guardar imagen de pago movil y efectivo con validacion de formato de imagen
+        if (msg.hasMedia) {
+    const mime = msg._data?.mimetype || '';
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp']; // formatos permitidos
+
+    if (!allowedTypes.includes(mime)) {
+        sendMessage(from, '⚠️ Solo se aceptan imágenes');
+        return;
+    }
+
+    if (typeof ultimoPedido !== 'undefined' && ultimoPedido[from]) {
+        const tipoPago = ultimoPedido[from].esperandoPagoMovil ? 'Pago Movil' :
+                         ultimoPedido[from].esperandoEfectivo ? 'Efectivo' : null;
+
+        if (tipoPago) {
+            msg.downloadMedia().then(media => {
+                if (media) {
+                    const pagosDir = path.join(__dirname, 'pagos');
+                    if (!fs.existsSync(pagosDir)) {
+                        fs.mkdirSync(pagosDir);
+                    }
+
+                    const fecha = new Date().toISOString().replace(/[:.]/g, '-');
+                    const extension = media.mimetype.split('/')[1];
+                    const filename = `pago_${from}_${fecha}.${extension}`;
+                    const filePath = path.join(pagosDir, filename);
+
+                    try {
+                        fs.writeFileSync(filePath, media.data, 'base64');
+                    } catch (err) {
+                        console.error('Error al guardar imagen:', err);
+                        sendMessage(from, '⚠️ No pudimos guardar tu comprobante. Intenta de nuevo.');
+                        return;
+                    }
+
+                    sendMessage(from, '¡Comprobante recibido! Pronto validaremos tu pago.');
+
+                    const { resumen, total } = ultimoPedido[from];
+                    const nombreCliente = msg._data?.notifyName || 'Desconocido';
+
+                    db.query('CALL add_customer(?, ?)', [from, nombreCliente], (errCliente, resCliente) => {
+                        if (errCliente) {
+                            console.log('Error al guardar cliente:', errCliente);
+                            return;
+                        }
+
+                        db.query('CALL add_order (?, ?, ?, ?, ?, ?)', [fecha, from, resumen, total, tipoPago, filename], (err, results) => {
+                            if (err) {
+                                console.log('Error en consulta:', err);
+                                sendMessage(from, '⚠️ Ha ocurrido un error, intenta de nuevo');
+                            } else {
+                                const ordenNum = results[0][0]?.orden || null;
+                                const mensaje = tipoPago === 'Pago Movil'
+                                    ? `Perfecto, tu pago móvil ha sido registrado para su validación. En breve nuestro equipo se comunicará contigo para coordinar la entrega.\n\n${nombreCliente}, tu orden es: ${ordenNum}`
+                                    : `Perfecto, puedes pagar en efectivo al momento de la entrega. En breve nuestro equipo se comunicará contigo para coordinar los detalles de entrega.\n\n${nombreCliente}, tu orden es: ${ordenNum}`;
+
+                                sendMessage(from, mensaje);
+                                setTimeout(() => {
+                                    sendMessage(from, `En caso de tener algún inconveniente con tu pedido, comunícate con soporte al: ${telefonoATC} (solo WhatsApp).`);
+                                }, 1000);
+                                broadcastNewOrder();
+                            }
+                        });
+                    });
+
+                    delete ultimoPedido[from].esperandoPagoMovil;
+                    delete ultimoPedido[from].esperandoEfectivo;
+                    delete ultimoPedido[from];
+                    
+                }
+            });
+            return;
         }
+    }
+}
 
         // --- Lógica de selección de sabores por código ---
         if (seleccionSabores[from] && seleccionSabores[from].esperando) {
