@@ -1085,5 +1085,5 @@ const iniciarTimeoutPedido = (from) => {
     pedidoTimeouts[from] = setTimeout(() => {
         pedidos[from] = [];
         sendMessage(from, '⏰ Su pedido ha sido eliminado por inactividad. Escriba _*D*_ para volver a comenzar.');
-    }, 10 * 60 * 1000);
+    }, 20 * 60 * 1000);
 };
