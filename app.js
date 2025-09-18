@@ -531,7 +531,7 @@ const listenMessage = () => {
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp']; // formatos permitidos
 
     if (!allowedTypes.includes(mime)) {
-        sendMessage(from, '⚠️ Solo se aceptan imágenes');
+        sendMessage(from, '⚠️ Debes enviarnos un capture de tu comprobante de pago. Solo se aceptan imágenes.');
         return;
     }
 
