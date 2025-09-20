@@ -80,8 +80,10 @@ function actualizarTasa() {
 // Programar para que se ejecute todos los días a las 12:00 am
 cron.schedule('0 0 * * *', () => {
     actualizarTasa();
-    numeroAutorizado.forEach(num => {
-        sendMessage(num, `✅ Tasa actualizada: Bs. ${tasaActual}` );
+    numeroAutorizado.forEach(num => { setTimeout (() => {
+        sendMessage(num, `✅ Tasa actualizada: Bs. ${tasaActual}` )
+    }, 2000)
+       ;
     })
 });
 
