@@ -304,21 +304,21 @@ const hamburguesasCod = {
     'HB1': { nombre: 'Smash burger', descripcion: 'Pan de batata, carne smash, queso, ketchup y mayonesa', precios: { S: 3, P: 4, C: 5.5 } },
     'HB2': { nombre: 'Doble Smash Burger', descripcion: 'Doble carne', precios: { S: 4.5, P: 5.5, C: 7 } },
     'HB3': { nombre: 'Triple Smash Burger', descripcion: 'Triple carne', precios: { S: 5.5, P: 6.5, C: 8 } },
-    'HB4': { nombre: 'Clásica', descripcion: 'Pan de batata, carne smash, tocineta, queso, ketchup y mayonesa', precios: { S: 4.5, P: 5.5, C: 7 } },
+    /* 'HB4': { nombre: 'Clásica', descripcion: 'Pan de batata, carne smash, tocineta, queso, ketchup y mayonesa', precios: { S: 4.5, P: 5.5, C: 7 } }, 
     'HB5': { nombre: 'Doble Clásica', descripcion: 'Doble carne', precios: { S: 5.5, P: 6.5, C: 8 } },
     'HB6': { nombre: 'Triple Clásica', descripcion: 'Triple carne', precios: { S: 7, P: 8, C: 9.5 } },
     'HB7': { nombre: 'Smash Rico', descripcion: 'Pan de batata, carne smash con mermelada de tocineta, queso, salsa relish', precios: { S: 4, P: 5, C: 6.5 } },
     'HB8': { nombre: 'Doble Smash Rico', descripcion: 'Doble carne', precios: { S: 5.5, P: 6.5, C: 8 } },
     'HB9': { nombre: 'Triple Smash Rico',descripcion: 'Triple carne', precios: { S: 6, P: 7, C: 8.5 } },
-    'HB10': { nombre: 'Keto Burger', descripcion: 'Lechuga, carne, tocienta, ketchup y mayonesa', precios: { S: 3.5, P: 4.5, C: 6 } },    
+    'HB10': { nombre: 'Keto Burger', descripcion: 'Lechuga, carne, tocienta, ketchup y mayonesa', precios: { S: 3.5, P: 4.5, C: 6 } }, */    
 };
 
-/* const nuggetsCod = {
+const nuggetsCod = {
     'NG1': { nombre: 'Nuggets de 4 piezas', precios: { S: 1.5, P: 2.5, C: 4 } },
     'NG2': { nombre: 'Nuggets de 6 piezas', precios: { S: 2, P: 3, C: 4.5 } },
     'NG3': { nombre: 'Nuggets de 10 piezas', precios: { S: 4.5, P: 5.5, C: 7 } }
 };
- */
+
 const papasCod = {
     'PA1': { nombre: 'Papas clásicas', precio: 1 },
     'PA2': { nombre: 'Canoa familiar', precio: 2 },
@@ -339,10 +339,10 @@ function getMenuSmashCod() {
         menu += ` *${data.nombre}*:\n`;
         menu += ` _${data.descripcion}_\n\n`;
     });
-    /* menu += '\n🍗 *Nuggets de pollo*\n'
+    menu += '\n🍗 *Nuggets de pollo*\n'
     Object.entries(nuggetsCod).forEach(([cod, data]) => {
         menu += `- *${cod}*: ${data.nombre}\n`;
-    }); */ 
+    });
     menu += '\n🍟 *Papas fritas*\n'
     Object.entries(papasCod).forEach(([cod, data]) => {
         menu += `- *${cod}*: ${data.nombre}  $${data.precio}\n`;
@@ -430,102 +430,6 @@ const listenMessage = () => {
                 return;
             }
         }
-
-        // === BLOQUE PARA RECIBIR Y GUARDAR IMAGEN DE PAGO MOVIL O EFECTIVO ===
-        /* if (msg.hasMedia) {
-            if (
-                console.log(msg.media),
-                typeof ultimoPedido !== 'undefined' &&
-                ultimoPedido[from]
-            ) {
-                if (ultimoPedido[from].esperandoPagoMovil) {
-                    msg.downloadMedia().then(media => {
-                        if (media) {
-                            const pagosDir = path.join(__dirname, 'pagos');
-                            if (!fs.existsSync(pagosDir)) {
-                                fs.mkdirSync(pagosDir);
-                            }
-                            const fecha = new Date().toISOString().replace(/[:.]/g, '-');
-                            const filename = `pago_${from}_${fecha}.${media.mimetype.split('/')[1]}`;
-                            const filePath = path.join(pagosDir, filename);
-                            fs.writeFileSync(filePath, media.data, 'base64');
-                            sendMessage(from, '¡Comprobante recibido! Pronto validaremos tu pago.');
-
-                            // === GUARDAR ORDEN EN BD ===
-                            const { resumen, total } = ultimoPedido[from];
-                            const nombreCliente = msg._data?.notifyName || 'Desconocido';
-                            db.query('CALL add_customer(?, ?)', [from, nombreCliente], (errCliente, resCliente) => {
-                                if (errCliente) {
-                                    console.log('Error al guardar cliente:', errCliente);
-                                    return;
-                                }
-                                let ordenNum = null;
-                                db.query('CALL add_order (?, ?, ?, ?, ?, ?)', [fecha, from, resumen, total, 'Pago Movil', filename], (err, results) => {
-                                    if (err) {
-                                        console.log('Error en consulta:', err);
-                                        sendMessage(from, '⚠️ Ha ocurrido un error, intenta de nuevo');
-                                    } else {
-                                        ordenNum = results[0][0]?.orden || null;
-                                        sendMessage(from, 'Perfecto, tu pago móvil ha sido registrado para su validacion. En breve nuestro equipo se comunicará contigo para coordinar la entrega.\n\n'+ nombreCliente + ', tu orden es: '+ ordenNum );
-                                        setTimeout(()=> {
-                                            sendMessage( from, 'En caso de tener algun inconveniente con tu pedido. Comunicate con soporte al: '+telefonoATC +' (solo Whatsapp).' )},1000)
-                                        broadcastNewOrder();
-                                    }
-                                });
-                            });
-
-                            delete ultimoPedido[from].esperandoPagoMovil;
-                            delete ultimoPedido[from];
-                        }
-                    });
-                    return;
-                } else if (ultimoPedido[from].esperandoEfectivo) {
-                    msg.downloadMedia().then(media => {
-                        if (media) {
-                            const pagosDir = path.join(__dirname, 'pagos');
-                            if (!fs.existsSync(pagosDir)) {
-                                fs.mkdirSync(pagosDir);
-                            }
-                            const fecha = new Date().toISOString().replace(/[:.]/g, '-');
-                            const filename = `pago_${from}_${fecha}.${media.mimetype.split('/')[1]}`;
-                            const filePath = path.join(pagosDir, filename);
-                            fs.writeFileSync(filePath, media.data, 'base64');
-                            sendMessage(from, '¡Foto recibida, pronto validaremos.');
-
-                            // === GUARDAR ORDEN EN BD ===
-                            const { resumen, total } = ultimoPedido[from];
-                            const nombreCliente = msg._data?.notifyName || 'Desconocido';
-                            db.query('CALL add_customer(?, ?)', [from, nombreCliente], (errCliente, resCliente) => {
-                                if (errCliente) {
-                                    console.log('Error al guardar cliente:', errCliente);
-                                    return;
-                                }
-                                let ordenNum = null;
-                                db.query('CALL add_order (?, ?, ?, ?, ?, ?)', [fecha, from, resumen, total, 'Efectivo', filename], (err, results) => {
-                                    if (err) {
-                                        console.log('Error en consulta:', err);
-                                        sendMessage(from, '⚠️ Ha ocurrido un error, intenta de nuevo');
-                                    } else {
-                                        ordenNum = results[0][0]?.orden || null;
-                                        sendMessage(from, 'Perfecto, puedes pagar en efectivo al momento de la entrega. En breve nuestro equipo se comunicara contigo para coordinar los detalles de entrega.\n\n'+ nombreCliente +'Tu orden es: ' + ordenNum );
-                                        setTimeout(()=> {
-                                            sendMessage( from, 'Comunicate con soporte al: '+telefonoATC +' en caso de incidencia con tu pedido. (solo Whatsapp)' )},1000)
-                                        broadcastNewOrder();
-                                    }
-                                });
-                            });
-
-                            delete ultimoPedido[from].esperandoEfectivo;
-                            delete ultimoPedido[from];
-                        }
-                    });
-                    return;
-                }
-            }
-            // Si no está esperando ninguno, mensaje de error
-            sendMessage(from, '⚠️ No podemos entender tu orden, valida que hayas escrito el comando indicado correctamente');
-            return;
-        } */
 
         // Bloque para recibir y guardar imagen de pago movil y efectivo con validacion de formato de imagen
         if (msg.hasMedia) {
@@ -1013,7 +917,7 @@ const listenMessage = () => {
                 }
 
                 // Nuggets
-               /*  const matchCodigoNugget = nuggetsCod[nombreProducto.toUpperCase()];
+                const matchCodigoNugget = nuggetsCod[nombreProducto.toUpperCase()];
                 if (matchCodigoNugget) {
                     seleccionSabores[from] = {
                         producto: {
@@ -1044,15 +948,12 @@ const listenMessage = () => {
                         pedidos[from].push(producto);
                         delete seleccionSabores[from];
                         iniciarTimeoutPedido(from);
-                        sendMessage(
-                            from,
-                            `Agregado: ${producto.cantidad} x ${producto.item} ($${producto.precio} c/u) = $${producto.subtotal}\n\nEscribe _*VER*_ para ver el total de tu pedido o sigue agregando productos.`
-                        );
+                        sendMessage(from, `✅ Hemos agregado: ${producto.cantidad} x ${producto.item} ($${producto.precio} c/u) = $${producto.subtotal}\n\nPuedes seguir agregando productos de nuestros menú.\n\nℹ️Escribe *A* para menú de arepas.\n\nℹ️Escribe *B* para menú de hamburguesas.\n\nℹ️ Si tu pedido esta completo, escribe *V* para verlo.`);
                     } else {
-                        sendMessage(from, 'Opción inválida. Responde con S (solo), P (con papas) o C (combo).');
+                        sendMessage(from, '⚠️ Opción inválida.\n\nℹ️ Responde con las opciones indicadas.\n\nEjemplo: *S* - para nuggets solos ó *C* - para nuggets en combo.');
                     }
                     return;
-                } */
+                }
 
                 // Papas
                 const matchCodigoPapa = papasCod[nombreProducto.toUpperCase()];
