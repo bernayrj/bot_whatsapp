@@ -295,7 +295,7 @@ const datosRecepcion = {};
 const telefonoATC = '0414-3354594';
 const numeroAutorizado = ['584129326767@c.us', '584149071774@c.us' , '584242320885@c.us', '584142604666@c.us'];
 const erroresUsuario = {}; // Lleva el conteo de errores por usuario
-const LIMITE_ERRORES = 5;
+const LIMITE_ERRORES = 3;
 
 
 // Catálogos SOLO por código
