@@ -360,15 +360,15 @@ function getMenuSmashCod() {
 const listenMessage = () => {
     client.on('message', (msg) => {
         const { from, body } = msg;
-       if (MODO_MANTENIMIENTO && !numeroAutorizado.includes(from)) {
-        sendMessage(from, '⚠️ El sistema de pedidos está en mantenimiento temporalmente. Por favor, intenta nuevamente más tarde.');
-        return;
-        } ;
         if (!msg.hasMedia && (!body || !body.trim())) return;
         if (from === 'status@broadcast') return;
         const texto = body.toLowerCase().trim();
         console.log(`[${from}] Cliente: ${body}`);
         logConversacion(from, 'Cliente', body);
+        if (MODO_MANTENIMIENTO && !numeroAutorizado.includes(from)) {
+        sendMessage(from, '⚠️ Nos encontramos en mantenimiento preventivo en nuestras instalaciones, de 12:00 am a 6:00 am. Durante este periodo no estaremos operativos. Gracias por tu comprension!');
+        return;
+        } ;
 
  // === ACTIVAR/DESACTIVAR LOG SOLO PARA ADMIN ===
         if (numeroAutorizado.includes(from)) {
