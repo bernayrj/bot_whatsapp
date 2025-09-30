@@ -44,6 +44,7 @@ let menuSaboresMar = '';
 let menuSaboresRefresco = '';
 let menuSaboresLipton = '';
 let LOG_CONVERSACIONES = true;
+let MODO_MANTENIMIENTO = false;
 let tasaActual = '';
 let arepasCod = {};
 let menuArepazo = '';
@@ -359,6 +360,10 @@ function getMenuSmashCod() {
 const listenMessage = () => {
     client.on('message', (msg) => {
         const { from, body } = msg;
+       if (MODO_MANTENIMIENTO && !numeroAutorizado.includes(from)) {
+        sendMessage(from, '⚠️ El sistema de pedidos está en mantenimiento temporalmente. Por favor, intenta nuevamente más tarde.');
+        return;
+        } ;
         if (!msg.hasMedia && (!body || !body.trim())) return;
         if (from === 'status@broadcast') return;
         const texto = body.toLowerCase().trim();
@@ -376,6 +381,16 @@ const listenMessage = () => {
                 toggleLogConversaciones(false);
                 sendMessage(from, '⛔ Log de conversaciones DESACTIVADO');
                 return;
+            }
+            if (texto === 'activar mantenimiento') {
+            MODO_MANTENIMIENTO = true;
+            sendMessage(from, '✅ Modo mantenimiento ACTIVADO. Los usuarios verán un mensaje de mantenimiento.');
+            return;
+            }
+            if (texto === 'desactivar mantenimiento') {
+             MODO_MANTENIMIENTO = false;
+            sendMessage(from, '⛔ Modo mantenimiento DESACTIVADO. El bot vuelve a funcionar normalmente.');
+            return;
             }
         }        
 
