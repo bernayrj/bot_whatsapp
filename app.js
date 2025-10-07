@@ -383,7 +383,7 @@ const listenMessage = () => {
     if (MODO_MANTENIMIENTO && !numeroAutorizado.includes(from)) {
       sendMessage(
         from,
-        "⚠️ Nos encontramos en mantenimiento preventivo en nuestras instalaciones, de 12:00 am a 6:00 am. Durante este periodo no estaremos operativos. Gracias por tu comprension!"
+        "⚠️ Nos encontramos en mantenimiento de nuestro sistema automatizado de pedidos (bot). Para ordenar comunicate al 0414-3354594. Gracias por tu comprensón."
       );
       return;
     }
