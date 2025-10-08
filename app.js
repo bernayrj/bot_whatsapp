@@ -36,11 +36,11 @@ console.log("INICIANDO CHATBOT LOS PRIMOS...");
 
 // Catálogos de sabores por código
 let catalogoSaboresCod = {};
-let catalogoSaboresMarCod = {};
+let catalogoSaboresPremiumCod = {};
 let catalogoSaboresRefresco = {};
 let catalogoSaboresLipton = {};
 let menuSabores = "";
-let menuSaboresMar = "";
+let menuSaboresPremium = "";
 let menuSaboresRefresco = "";
 let menuSaboresLipton = "";
 let LOG_CONVERSACIONES = true;
@@ -96,15 +96,15 @@ function cargarSaboresDesdeBD(callback) {
       return;
     }
     catalogoSaboresCod = {};
-    catalogoSaboresMarCod = {};
+    catalogoSaboresPremiumCod = {};
     catalogoSaboresRefresco = {};
     catalogoSaboresLipton = {};
 
     results[0].forEach((row) => {
       if (row.categoria === "normal") {
         catalogoSaboresCod[row.codigo] = row.sabor;
-      } else if (row.categoria === "mar") {
-        catalogoSaboresMarCod[row.codigo] = row.sabor;
+      } else if (row.categoria === "premium") {
+        catalogoSaboresPremiumCod[row.codigo] = row.sabor;
       } else if (row.categoria === "refresco") {
         catalogoSaboresRefresco[row.codigo] = row.sabor;
       } else if (row.categoria === "lipton") {
@@ -115,7 +115,7 @@ function cargarSaboresDesdeBD(callback) {
     menuSabores = Object.entries(catalogoSaboresCod)
       .map(([cod, sabor]) => `- *${cod}*: ${sabor}`)
       .join("\n");
-    menuSaboresMar = Object.entries(catalogoSaboresMarCod)
+    menuSaboresPremium = Object.entries(catalogoSaboresPremiumCod)
       .map(([cod, sabor]) => `- *${cod}*: ${sabor}`)
       .join("\n");
     menuSaboresRefresco = Object.entries(catalogoSaboresRefresco)
@@ -598,21 +598,21 @@ const listenMessage = () => {
       let validos = false;
       let sabores = [];
 
-      if (tipo === "mariscos") {
+      /*       if (tipo === "premium") {
         console.log(
           codigos.length,
           catalogoSaboresCod[codigos[0]],
           catalogoSaboresCod[codigos[1]],
-          catalogoSaboresMarCod[codigos[0]],
-          catalogoSaboresMarCod[codigos[1]]
+          catalogoSaboresPremiumCod[codigos[0]],
+          catalogoSaboresPremiumCod[codigos[1]]
         );
         validos =
           codigos.length <= 2 &&
           codigos.length > 0 &&
           (catalogoSaboresCod[codigos[0]] ||
             catalogoSaboresCod[codigos[1]] ||
-            catalogoSaboresMarCod[codigos[0]] ||
-            catalogoSaboresMarCod[codigos[1]]);
+            catalogoSaboresPremiumCod[codigos[0]] ||
+            catalogoSaboresPremiumCod[codigos[1]]);
         if (validos) {
           console.log("validos");
           const saboresfn = () => {
@@ -620,28 +620,48 @@ const listenMessage = () => {
             if (catalogoSaboresCod[codigos[0]]) {
               console.log("posicion 0:", catalogoSaboresCod[codigos[0]]);
               saboresArray.push(catalogoSaboresCod[codigos[0]]);
-            } else if (catalogoSaboresMarCod[codigos[0]]) {
-              console.log("posicion 0:", catalogoSaboresMarCod[codigos[0]]);
-              saboresArray.push(catalogoSaboresMarCod[codigos[0]]);
+            } else if (catalogoSaboresPremiumCod[codigos[0]]) {
+              console.log("posicion 0:", catalogoSaboresPremiumCod[codigos[0]]);
+              saboresArray.push(catalogoSaboresPremiumCod[codigos[0]]);
             }
             if (codigos[1]) {
               if (catalogoSaboresCod[codigos[1]]) {
                 console.log("posicion 0:", catalogoSaboresCod[codigos[1]]);
                 saboresArray.push(catalogoSaboresCod[codigos[1]]);
-              } else if (catalogoSaboresMarCod[codigos[1]]) {
-                console.log("posicion 0:", catalogoSaboresMarCod[codigos[1]]);
-                saboresArray.push(catalogoSaboresMarCod[codigos[1]]);
+              } else if (catalogoSaboresPremiumCod[codigos[1]]) {
+                console.log(
+                  "posicion 0:",
+                  catalogoSaboresPremiumCod[codigos[1]]
+                );
+                saboresArray.push(catalogoSaboresPremiumCod[codigos[1]]);
               }
             }
             return saboresArray;
           };
 
           sabores = saboresfn();
+        } */
+      if (tipo === "premium") {
+        // NUEVO: Solo 1 normal y 1 premium, no dos del mismo tipo
+        if (codigos.length === 2) {
+          const esNormal = (c) => !!catalogoSaboresCod[c];
+          const esPremium = (c) => !!catalogoSaboresPremiumCod[c];
+          const [c1, c2] = codigos;
+          validos =
+            (esNormal(c1) && esPremium(c2)) || (esPremium(c1) && esNormal(c2));
+          if (validos) {
+            sabores = [
+              esNormal(c1) ? catalogoSaboresCod[c1] : catalogoSaboresCod[c2],
+              esPremium(c1)
+                ? catalogoSaboresPremiumCod[c1]
+                : catalogoSaboresPremiumCod[c2],
+            ];
+          }
         }
         if (!validos) {
           sendMessage(
             from,
-            `Debes indicar 1 código de cada menú, separados por coma.\nEjemplo: SA1, SM3\nSabores normales:\n${menuSabores}\nSabores mar:\n${menuSaboresMar}`
+            `Debes indicar 1 código de cada sabor, separados por coma.\nEjemplo: SA1, SP3\nSabores normales:\n${menuSabores}\nSabores premium:\n${menuSaboresPremium}`
           );
           return;
         }
@@ -1027,8 +1047,8 @@ const listenMessage = () => {
                 cantidad,
                 nombre: matchCodigoArepa.nombre,
                 precio: matchCodigoArepa.precio,
-                tipo: matchCodigoArepa.nombre.includes("mariscos")
-                  ? "mariscos"
+                tipo: matchCodigoArepa.nombre.includes("premium")
+                  ? "premium"
                   : "normal",
               };
               sendMessage(
@@ -1046,16 +1066,16 @@ const listenMessage = () => {
                 subtotal: cantidad * matchCodigoArepa.precio,
               },
               esperando: true,
-              tipo: matchCodigoArepa.nombre.includes("mariscos")
-                ? "mariscos"
+              tipo: matchCodigoArepa.nombre.includes("premium")
+                ? "premium"
                 : "normal",
               cantidad: 2,
             };
             cargarSaboresDesdeBD(() => {
-              if (matchCodigoArepa.nombre.includes("mariscos")) {
+              if (matchCodigoArepa.nombre.includes("premium")) {
                 sendMessage(
                   from,
-                  `Indica los sabores para tu arepa\n\nℹ️ Máximo 2, separados por coma.\n\nEjemplo: SA10, SM1 ✅\n\nSabores disponibles:\n${menuSabores}\nSabores mar:\n${menuSaboresMar}`
+                  `Indica los sabores para tu arepa\n\nℹ️ Máximo 2, separados por coma.\n\nEjemplo: SA10, SP1 ✅\n\nSabores disponibles:\n${menuSabores}\nSabores premium:\n${menuSaboresPremium}`
                 );
               } else {
                 sendMessage(
@@ -1077,12 +1097,12 @@ const listenMessage = () => {
                                 subtotal: cantidad * matchCodigoArepa.precio
                             },
                             esperando: true,
-                            tipo: matchCodigoArepa.nombre.includes('mariscos') ? 'mariscos' : 'normal',
+                            tipo: matchCodigoArepa.nombre.includes('premium') ? 'premium' : 'normal',
                             cantidad: 2
                         };
                         cargarSaboresDesdeBD(()=>{
-                            if (matchCodigoArepa.nombre.includes('mariscos')) {
-                            sendMessage(from, `Sabores normales:\n${menuSabores}\nSabores de mar:\n${menuSaboresMar}\n\nℹ️ Responde solo con el código exacto de los sabores que deseas separados por coma.\n\nEjemplo: *SA10, SM1* - para ordenar una arepa con pulpo y queso amarillo. ✅\n\nℹ️ Si envias, más de 2 sabores: SA1, SM1, SA5 - No entendere. ❌`);
+                            if (matchCodigoArepa.nombre.includes('premium')) {
+                            sendMessage(from, `Sabores normales:\n${menuSabores}\nSabores de mar:\n${menuSaboresPremium}\n\nℹ️ Responde solo con el código exacto de los sabores que deseas separados por coma.\n\nEjemplo: *SA10, SP1* - para ordenar una arepa con pulpo y queso amarillo. ✅\n\nℹ️ Si envias, más de 2 sabores: SA1, SP1, SA5 - No entendere. ❌`);
                             } else {
                                 sendMessage(from, `*Sabores rellenos:*\n${menuSabores}\n\nℹ️ Responde solo con el código exacto de los sabores que deseas separados por coma.\n\nEjemplo: *SA1, SA7* - para ordenar una arepa con pollo y tocineta. ✅\n\nℹ️ Si envias, más de 2 sabores: SA1, SA7, SA5 - No entendere. ❌`);
                             }
@@ -1123,8 +1143,8 @@ const listenMessage = () => {
               sendMessage(
                 from,
                 `👍 Perfecto, vamos a elegir los sabores para cada arepa.\n\n*Indica los sabores para la arepa #1*\n\nℹ️ Máximo 2, separados por coma.\n\nEjemplo: SA1, SA7 ✅\n\nSabores disponibles:\n${
-                  seleccionSaboresIndividual[from].tipo === "mariscos"
-                    ? menuSabores + "\nSabores mar:\n" + menuSaboresMar
+                  seleccionSaboresIndividual[from].tipo === "premium"
+                    ? menuSabores + "\nSabores premium:\n" + menuSaboresPremium
                     : menuSabores
                 }`
               );
@@ -1146,10 +1166,10 @@ const listenMessage = () => {
               cantidad: 2,
             };
             cargarSaboresDesdeBD(() => {
-              if (seleccionSaboresIndividual[from].tipo === "mariscos") {
+              if (seleccionSaboresIndividual[from].tipo === "premium") {
                 sendMessage(
                   from,
-                  `Indica los sabores para todas tus arepas\n\nℹ️ Máximo 2, separados por coma.\n\nEjemplo: SA10, SM1 ✅\n\nSabores disponibles:\n${menuSabores}\nSabores mar:\n${menuSaboresMar}`
+                  `Indica los sabores para todas tus arepas\n\nℹ️ Máximo 2, separados por coma.\n\nEjemplo: SA10, SP1 ✅\n\nSabores disponibles:\n${menuSabores}\nSabores premium:\n${menuSaboresPremium}`
                 );
               } else {
                 sendMessage(
@@ -1171,7 +1191,7 @@ const listenMessage = () => {
         }
 
         // --- Lógica para selección de sabores individuales por arepa ---
-        if (
+        /* if (
           seleccionSaboresIndividual[from] &&
           seleccionSaboresIndividual[from].esperando
         ) {
@@ -1183,16 +1203,16 @@ const listenMessage = () => {
           let sabores = [];
 
           // Validación de hasta 2 sabores por arepa
-          if (tipo === "mariscos") {
+          if (tipo === "premium") {
             validos =
               codigos.length <= 2 &&
               codigos.length > 0 &&
               codigos.every(
-                (c) => catalogoSaboresCod[c] || catalogoSaboresMarCod[c]
+                (c) => catalogoSaboresCod[c] || catalogoSaboresPremiumCod[c]
               );
             if (validos) {
               sabores = codigos.map(
-                (c) => catalogoSaboresCod[c] || catalogoSaboresMarCod[c]
+                (c) => catalogoSaboresCod[c] || catalogoSaboresPremiumCod[c]
               );
             }
           } else {
@@ -1211,8 +1231,8 @@ const listenMessage = () => {
               `⚠️ Debes indicar hasta 2 códigos de sabor válidos para la arepa #${
                 idx + 1
               }, separados por coma.\n\nEjemplo: SA1, SA7\n\nSabores disponibles:\n${
-                tipo === "mariscos"
-                  ? menuSabores + "\n" + menuSaboresMar
+                tipo === "premium"
+                  ? menuSabores + "\n" + menuSaboresPremium
                   : menuSabores
               }`
             );
@@ -1233,6 +1253,114 @@ const listenMessage = () => {
               `Ahora indica los sabores para la arepa #${
                 seleccionSaboresIndividual[from].actual + 1
               }\n\nℹ️ Máximo 2, separados por coma.\n\nEjemplo: SA1, SA7 ✅`
+            );
+            return;
+          } else {
+            // Cuando termina, agrega cada arepa como producto individual con sus sabores
+            pedidos[from] = pedidos[from] || [];
+            for (
+              let i = 0;
+              i < seleccionSaboresIndividual[from].cantidad;
+              i++
+            ) {
+              const precioNum =
+                Number(seleccionSaboresIndividual[from].precio) || 0; // Fuerza tipo numérico
+              pedidos[from].push({
+                item: seleccionSaboresIndividual[from].nombre,
+                precio: precioNum,
+                cantidad: 1,
+                subtotal: precioNum,
+                sabores: seleccionSaboresIndividual[from].sabores[i],
+              });
+            }
+            iniciarTimeoutPedido(from);
+            sendMessage(
+              from,
+              `✅ ¡Listo! Agregamos ${seleccionSaboresIndividual[from].cantidad} arepas:\n` +
+                seleccionSaboresIndividual[from].sabores
+                  .map((sab, idx) => `- Arepa #${idx + 1}: ${sab.join(", ")}`)
+                  .join("\n") +
+                `\n\nPuedes seguir agregando productos de nuestros menú.\n\nℹ️ Escribe *A* para el menú de arepas.\n\nℹ️ Escribe *B* para el menú de hamburguesas.\n\nℹ️ Si tu pedido esté completo, escribe *V* para verlo.`
+            );
+            delete seleccionSaboresIndividual[from];
+            return;
+          }
+        }  */
+
+        if (
+          seleccionSaboresIndividual[from] &&
+          seleccionSaboresIndividual[from].esperando
+        ) {
+          // El usuario está eligiendo sabores para cada arepa, uno por uno
+          const codigos = body.split(",").map((s) => s.trim().toUpperCase());
+          const idx = seleccionSaboresIndividual[from].actual;
+          const tipo = seleccionSaboresIndividual[from].tipo;
+          let validos = false;
+          let sabores = [];
+
+          // Validación de hasta 2 sabores por arepa
+          if (tipo === "premium") {
+            // Solo 1 normal y 1 premium, no dos del mismo tipo
+            if (codigos.length === 2) {
+              const esNormal = (c) => !!catalogoSaboresCod[c];
+              const esPremium = (c) => !!catalogoSaboresPremiumCod[c];
+              const [c1, c2] = codigos;
+              validos =
+                (esNormal(c1) && esPremium(c2)) ||
+                (esPremium(c1) && esNormal(c2));
+              if (validos) {
+                sabores = [
+                  esNormal(c1)
+                    ? catalogoSaboresCod[c1]
+                    : catalogoSaboresCod[c2],
+                  esPremium(c1)
+                    ? catalogoSaboresPremiumCod[c1]
+                    : catalogoSaboresPremiumCod[c2],
+                ];
+              }
+            }
+            if (!validos) {
+              sendMessage(
+                from,
+                `⚠️ Debes indicar 1 código de sabor normal y 1 de sabor premium para la arepa #${
+                  idx + 1
+                }, separados por coma.\n\nEjemplo: SA1, SP3\n\nSabores normales:\n${menuSabores}\nSabores premium:\n${menuSaboresPremium}`
+              );
+              return;
+            }
+          } else {
+            validos =
+              codigos.length <= 2 &&
+              codigos.length > 0 &&
+              codigos.every((c) => catalogoSaboresCod[c]);
+            if (validos) {
+              sabores = codigos.map((c) => catalogoSaboresCod[c]);
+            }
+            if (!validos) {
+              sendMessage(
+                from,
+                `⚠️ Debes indicar hasta 2 códigos de sabor válidos para la arepa #${
+                  idx + 1
+                }, separados por coma.\n\nEjemplo: SA1, SA7\n\nSabores disponibles:\n${menuSabores}`
+              );
+              return;
+            }
+          }
+
+          // Guarda los sabores elegidos para la arepa actual
+          seleccionSaboresIndividual[from].sabores.push(sabores);
+          seleccionSaboresIndividual[from].actual++;
+
+          // Si faltan arepas, pide el siguiente sabor
+          if (
+            seleccionSaboresIndividual[from].actual <
+            seleccionSaboresIndividual[from].cantidad
+          ) {
+            sendMessage(
+              from,
+              `Ahora indica los sabores para la arepa #${
+                seleccionSaboresIndividual[from].actual + 1
+              }\n\nℹ️ Máximo 2, separados por coma.\n\nEjemplo: SA1, SP3 ✅`
             );
             return;
           } else {
