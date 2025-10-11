@@ -321,21 +321,51 @@ const hamburguesasCod = {
     descripcion: "Triple carne",
     precios: { S: 5.5, P: 6.5, C: 8.5 },
   },
-  /* 'HB4': { nombre: 'Clásica', descripcion: 'Pan de batata, carne smash, tocineta, queso, ketchup y mayonesa', precios: { S: 4.5, P: 5.5, C: 7.5 } }, 
-    'HB5': { nombre: 'Doble Clásica', descripcion: 'Doble carne', precios: { S: 5.5, P: 6.5, C: 8.5 } },
-    'HB6': { nombre: 'Triple Clásica', descripcion: 'Triple carne', precios: { S: 7, P: 8, C: 10 } },
-    'HB7': { nombre: 'Smash Rico', descripcion: 'Pan de batata, carne smash con mermelada de tocineta, queso, salsa relish', precios: { S: 4, P: 5, C: 7 } },
-    'HB8': { nombre: 'Doble Smash Rico', descripcion: 'Doble carne', precios: { S: 5.5, P: 6.5, C: 8.5 } },
-    'HB9': { nombre: 'Triple Smash Rico',descripcion: 'Triple carne', precios: { S: 6, P: 7, C: 9 } },
-    'HB10': { nombre: 'Keto Burger', descripcion: 'Lechuga, carne, tocienta, ketchup y mayonesa', precios: { S: 3.5, P: 4.5, C: 6.5 } }, */
+  HB4: {
+    nombre: "Clásica",
+    descripcion:
+      "Pan de batata, carne smash, tocineta, queso, ketchup y mayonesa",
+    precios: { S: 4.5, P: 5.5, C: 7.5 },
+  },
+  HB5: {
+    nombre: "Doble Clásica",
+    descripcion: "Doble carne",
+    precios: { S: 5.5, P: 6.5, C: 8.5 },
+  },
+  HB6: {
+    nombre: "Triple Clásica",
+    descripcion: "Triple carne",
+    precios: { S: 7, P: 8, C: 10 },
+  },
+  HB7: {
+    nombre: "Smash Rico",
+    descripcion:
+      "Pan de batata, carne smash con mermelada de tocineta, queso, salsa relish",
+    precios: { S: 4, P: 5, C: 7 },
+  },
+  HB8: {
+    nombre: "Doble Smash Rico",
+    descripcion: "Doble carne",
+    precios: { S: 5.5, P: 6.5, C: 8.5 },
+  },
+  HB9: {
+    nombre: "Triple Smash Rico",
+    descripcion: "Triple carne",
+    precios: { S: 6, P: 7, C: 9 },
+  },
+  HB10: {
+    nombre: "Keto Burger",
+    descripcion: "Lechuga, carne, tocienta, ketchup y mayonesa",
+    precios: { S: 3.5, P: 4.5, C: 6.5 },
+  },
 };
 
-/* const nuggetsCod = {
+const nuggetsCod = {
   NG1: { nombre: "Nuggets de 4 piezas", precios: { S: 1.5, P: 2.5, C: 4.5 } },
   NG2: { nombre: "Nuggets de 6 piezas", precios: { S: 2, P: 3, C: 5 } },
   NG3: { nombre: "Nuggets de 10 piezas", precios: { S: 4.5, P: 5.5, C: 7.5 } },
 };
- */
+
 const papasCod = {
   PA1: { nombre: "Papas clásicas", precio: 1 },
   PA2: { nombre: "Canoa familiar", precio: 2 },
@@ -355,10 +385,10 @@ function getMenuSmashCod() {
     menu += ` *${data.nombre}*:\n`;
     menu += ` _${data.descripcion}_\n\n`;
   });
-  /* menu += "\n🍗 *Nuggets de pollo*\n";
+  menu += "\n🍗 *Nuggets de pollo*\n";
   Object.entries(nuggetsCod).forEach(([cod, data]) => {
     menu += `- *${cod}*: ${data.nombre}\n`;
-  }); */
+  });
   menu += "\n🍟 *Papas fritas*\n";
   Object.entries(papasCod).forEach(([cod, data]) => {
     menu += `- *${cod}*: ${data.nombre}  $${data.precio}\n`;
@@ -1444,7 +1474,7 @@ const listenMessage = () => {
         }
 
         // Nuggets
-        /* const matchCodigoNugget = nuggetsCod[nombreProducto.toUpperCase()];
+        const matchCodigoNugget = nuggetsCod[nombreProducto.toUpperCase()];
         if (matchCodigoNugget) {
           seleccionSabores[from] = {
             producto: {
@@ -1490,7 +1520,7 @@ const listenMessage = () => {
           }
           return;
         }
- */
+
         // Papas
         const matchCodigoPapa = papasCod[nombreProducto.toUpperCase()];
         if (matchCodigoPapa) {
