@@ -1498,7 +1498,7 @@ const listenMessage = () => {
             item: matchCodigoPapa.nombre,
             precio: matchCodigoPapa.precio,
             cantidad: cantidad,
-            subtotal: 1 * matchCodigoPapa.precio,
+            subtotal: cantidad * matchCodigoPapa.precio,
           };
           pedidos[from] = pedidos[from] || [];
           pedidos[from].push(producto);
