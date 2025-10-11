@@ -309,31 +309,31 @@ const hamburguesasCod = {
   HB1: {
     nombre: "Smash burger",
     descripcion: "Pan de batata, carne smash, queso, ketchup y mayonesa",
-    precios: { S: 3, P: 4, C: 5.5 },
+    precios: { S: 3, P: 4, C: 6 },
   },
   HB2: {
     nombre: "Doble Smash Burger",
     descripcion: "Doble carne",
-    precios: { S: 4.5, P: 5.5, C: 7 },
+    precios: { S: 4.5, P: 5.5, C: 7.5 },
   },
   HB3: {
     nombre: "Triple Smash Burger",
     descripcion: "Triple carne",
-    precios: { S: 5.5, P: 6.5, C: 8 },
+    precios: { S: 5.5, P: 6.5, C: 8.5 },
   },
-  /* 'HB4': { nombre: 'Clásica', descripcion: 'Pan de batata, carne smash, tocineta, queso, ketchup y mayonesa', precios: { S: 4.5, P: 5.5, C: 7 } }, 
-    'HB5': { nombre: 'Doble Clásica', descripcion: 'Doble carne', precios: { S: 5.5, P: 6.5, C: 8 } },
-    'HB6': { nombre: 'Triple Clásica', descripcion: 'Triple carne', precios: { S: 7, P: 8, C: 9.5 } },
-    'HB7': { nombre: 'Smash Rico', descripcion: 'Pan de batata, carne smash con mermelada de tocineta, queso, salsa relish', precios: { S: 4, P: 5, C: 6.5 } },
-    'HB8': { nombre: 'Doble Smash Rico', descripcion: 'Doble carne', precios: { S: 5.5, P: 6.5, C: 8 } },
-    'HB9': { nombre: 'Triple Smash Rico',descripcion: 'Triple carne', precios: { S: 6, P: 7, C: 8.5 } },
-    'HB10': { nombre: 'Keto Burger', descripcion: 'Lechuga, carne, tocienta, ketchup y mayonesa', precios: { S: 3.5, P: 4.5, C: 6 } }, */
+  /* 'HB4': { nombre: 'Clásica', descripcion: 'Pan de batata, carne smash, tocineta, queso, ketchup y mayonesa', precios: { S: 4.5, P: 5.5, C: 7.5 } }, 
+    'HB5': { nombre: 'Doble Clásica', descripcion: 'Doble carne', precios: { S: 5.5, P: 6.5, C: 8.5 } },
+    'HB6': { nombre: 'Triple Clásica', descripcion: 'Triple carne', precios: { S: 7, P: 8, C: 10 } },
+    'HB7': { nombre: 'Smash Rico', descripcion: 'Pan de batata, carne smash con mermelada de tocineta, queso, salsa relish', precios: { S: 4, P: 5, C: 7 } },
+    'HB8': { nombre: 'Doble Smash Rico', descripcion: 'Doble carne', precios: { S: 5.5, P: 6.5, C: 8.5 } },
+    'HB9': { nombre: 'Triple Smash Rico',descripcion: 'Triple carne', precios: { S: 6, P: 7, C: 9 } },
+    'HB10': { nombre: 'Keto Burger', descripcion: 'Lechuga, carne, tocienta, ketchup y mayonesa', precios: { S: 3.5, P: 4.5, C: 6.5 } }, */
 };
 
 /* const nuggetsCod = {
-  NG1: { nombre: "Nuggets de 4 piezas", precios: { S: 1.5, P: 2.5, C: 4 } },
-  NG2: { nombre: "Nuggets de 6 piezas", precios: { S: 2, P: 3, C: 4.5 } },
-  NG3: { nombre: "Nuggets de 10 piezas", precios: { S: 4.5, P: 5.5, C: 7 } },
+  NG1: { nombre: "Nuggets de 4 piezas", precios: { S: 1.5, P: 2.5, C: 4.5 } },
+  NG2: { nombre: "Nuggets de 6 piezas", precios: { S: 2, P: 3, C: 5 } },
+  NG3: { nombre: "Nuggets de 10 piezas", precios: { S: 4.5, P: 5.5, C: 7.5 } },
 };
  */
 const papasCod = {
