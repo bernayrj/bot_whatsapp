@@ -260,6 +260,12 @@ async function resetSession() {
     // Create and reinitialize client
     client = new Client({
       authStrategy: new LocalAuth({ clientId: "default" }),
+
+      puppeteer: {
+        executablePath: "/usr/bin/google-chrome", // o la ruta que te dé `which google-chrome`
+        headless: true,
+        args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      },
     });
 
     setupClientEvents(client);
@@ -283,6 +289,12 @@ function logConversacion(from, quien, mensaje) {
 // Initial startup
 client = new Client({
   authStrategy: new LocalAuth({ clientId: "default" }),
+
+  puppeteer: {
+    executablePath: "/usr/bin/google-chrome", // o la ruta que te dé `which google-chrome`
+    headless: true,
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+  },
 });
 
 setupClientEvents(client);
