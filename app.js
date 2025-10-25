@@ -636,7 +636,7 @@ const listenMessage = () => {
               delete ultimoPedido[from].esperandoPagoMovil;
               delete ultimoPedido[from].esperandoEfectivo;
               delete ultimoPedido[from];
-              limpiarEstadoCliente(from);
+              /* limpiarEstadoCliente(from); */
             }
           });
           return;
