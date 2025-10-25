@@ -306,12 +306,23 @@ const seleccionSaboresIndividual = {}; // NUEVO: Maneja el estado de selección 
 const pedidoTimeouts = {};
 const datosRecepcion = {};
 const telefonoATC = "0414-3354594";
-const numeroAutorizado = [
-  "584129326767@c.us",
-  "584149071774@c.us",
-  "584242320885@c.us",
-  "584142604666@c.us",
-];
+let numeroAutorizado = [];
+
+// Cargar números autorizados desde la BD al iniciar la app
+function cargarNumerosAutorizados(callback) {
+  db.query("CALL get_num_admin()", (err, results) => {
+    if (err) {
+      console.error("Error al obtener números autorizados:", err);
+      return;
+    }
+    // Asume que el SP retorna una columna 'numero'
+    numeroAutorizado = results[0].map((row) => row.numero);
+    console.log("Números autorizados cargados:", numeroAutorizado);
+    if (callback) callback();
+  });
+}
+
+cargarNumerosAutorizados();
 const erroresUsuario = {}; // Lleva el conteo de errores por usuario
 const LIMITE_ERRORES = 3;
 
@@ -625,6 +636,7 @@ const listenMessage = () => {
               delete ultimoPedido[from].esperandoPagoMovil;
               delete ultimoPedido[from].esperandoEfectivo;
               delete ultimoPedido[from];
+              limpiarEstadoCliente(from);
             }
           });
           return;
@@ -883,6 +895,7 @@ const listenMessage = () => {
           delete pedidoTimeouts[from];
         }
         delete pedidos[from];
+        limpiarEstadoCliente(from);
         sendMessage(from, "ℹ️ Tu pedido ha sido eliminado.");
         setTimeout(() => {
           sendMessage(from, "ℹ️ Escribe *D* para volver a iniciar");
@@ -994,6 +1007,7 @@ const listenMessage = () => {
         if (pedidoTimeouts[from]) {
           clearTimeout(pedidoTimeouts[from]);
           delete pedidoTimeouts[from];
+          limpiarEstadoCliente(from);
         }
         if (typeof ultimoPedido !== "undefined" && ultimoPedido[from]) {
           const { fecha, resumen, total } = ultimoPedido[from];
@@ -1040,6 +1054,7 @@ const listenMessage = () => {
             }
           );
           delete ultimoPedido[from];
+          limpiarEstadoCliente(from);
         } else {
           console.log("No hay datos de pedido para guardar.");
         }
@@ -1665,7 +1680,8 @@ const sendMedia = (to, file, caption = "") => {
 
 const iniciarTimeoutPedido = (from) => {
   clearTimeout(pedidoTimeouts[from]);
-  delete pedidoTimeouts[from];
+  //delete pedidoTimeouts[from];
+  limpiarEstadoCliente(from);
   pedidoTimeouts[from] = setTimeout(() => {
     pedidos[from] = [];
     sendMessage(
@@ -1674,3 +1690,49 @@ const iniciarTimeoutPedido = (from) => {
     );
   }, 20 * 60 * 1000);
 };
+
+function limpiarEstadoCliente(from) {
+  delete pedidos[from];
+  delete seleccionSabores[from];
+  delete seleccionSaboresIndividual[from];
+  delete datosRecepcion[from];
+  delete ultimoPedido[from];
+  delete pedidoTimeouts[from];
+  delete erroresUsuario[from];
+}
+
+process.on("uncaughtException", (err) => {
+  console.error("Excepción no capturada:", err);
+  numeroAutorizado.forEach((num) => {
+    setTimeout(() => {
+      sendMessage(num, err);
+    }, 5000);
+  });
+  // Opcional: reiniciar el proceso o enviar alerta
+});
+
+setInterval(() => {
+  const mem = process.memoryUsage();
+  console.log(`Memoria usada: ${(mem.heapUsed / 1024 / 1024).toFixed(2)} MB`);
+}, 60000); // cada minuto
+
+function limpiarEstadosInactivos() {
+  const INACTIVIDAD_MAXIMA = 30 * 60 * 1000; // 30 minutos
+  const ahora = Date.now();
+
+  Object.keys(pedidoTimeouts).forEach((from) => {
+    const timeout = pedidoTimeouts[from];
+    if (timeout && ahora - timeout._idleStart > INACTIVIDAD_MAXIMA) {
+      console.log(`[${from}] Eliminando estado por inactividad prolongada`);
+      limpiarEstadoCliente(from);
+      sendMessage(
+        from,
+        "⏰ Tu sesión ha expirado por inactividad. Escribe *D* para comenzar un nuevo pedido."
+      );
+    }
+  });
+}
+
+setInterval(() => {
+  limpiarEstadosInactivos();
+}, 10 * 60 * 1000); // cada 10 minutos
