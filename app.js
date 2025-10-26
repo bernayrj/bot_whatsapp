@@ -653,49 +653,6 @@ const listenMessage = () => {
       let validos = false;
       let sabores = [];
 
-      /*       if (tipo === "premium") {
-        console.log(
-          codigos.length,
-          catalogoSaboresCod[codigos[0]],
-          catalogoSaboresCod[codigos[1]],
-          catalogoSaboresPremiumCod[codigos[0]],
-          catalogoSaboresPremiumCod[codigos[1]]
-        );
-        validos =
-          codigos.length <= 2 &&
-          codigos.length > 0 &&
-          (catalogoSaboresCod[codigos[0]] ||
-            catalogoSaboresCod[codigos[1]] ||
-            catalogoSaboresPremiumCod[codigos[0]] ||
-            catalogoSaboresPremiumCod[codigos[1]]);
-        if (validos) {
-          console.log("validos");
-          const saboresfn = () => {
-            let saboresArray = [];
-            if (catalogoSaboresCod[codigos[0]]) {
-              console.log("posicion 0:", catalogoSaboresCod[codigos[0]]);
-              saboresArray.push(catalogoSaboresCod[codigos[0]]);
-            } else if (catalogoSaboresPremiumCod[codigos[0]]) {
-              console.log("posicion 0:", catalogoSaboresPremiumCod[codigos[0]]);
-              saboresArray.push(catalogoSaboresPremiumCod[codigos[0]]);
-            }
-            if (codigos[1]) {
-              if (catalogoSaboresCod[codigos[1]]) {
-                console.log("posicion 0:", catalogoSaboresCod[codigos[1]]);
-                saboresArray.push(catalogoSaboresCod[codigos[1]]);
-              } else if (catalogoSaboresPremiumCod[codigos[1]]) {
-                console.log(
-                  "posicion 0:",
-                  catalogoSaboresPremiumCod[codigos[1]]
-                );
-                saboresArray.push(catalogoSaboresPremiumCod[codigos[1]]);
-              }
-            }
-            return saboresArray;
-          };
-
-          sabores = saboresfn();
-        } */
       if (tipo === "premium") {
         // NUEVO: Solo 1 normal y 1 premium, no dos del mismo tipo
         if (codigos.length === 2) {
@@ -1143,29 +1100,6 @@ const listenMessage = () => {
               }
             });
             return;
-            /*  const matchCodigoArepa = arepasCod[nombreProducto.toUpperCase()];
-                if (matchCodigoArepa) {
-                    // Si requiere sabores
-                    if (matchCodigoArepa.nombre.includes('2 sabores')) {
-                        seleccionSabores[from] = {
-                            producto: {
-                                item: matchCodigoArepa.nombre,
-                                precio: matchCodigoArepa.precio,
-                                cantidad: cantidad,
-                                subtotal: cantidad * matchCodigoArepa.precio
-                            },
-                            esperando: true,
-                            tipo: matchCodigoArepa.nombre.includes('premium') ? 'premium' : 'normal',
-                            cantidad: 2
-                        };
-                        cargarSaboresDesdeBD(()=>{
-                            if (matchCodigoArepa.nombre.includes('premium')) {
-                            sendMessage(from, `Sabores normales:\n${menuSabores}\nSabores de mar:\n${menuSaboresPremium}\n\nℹ️ Responde solo con el código exacto de los sabores que deseas separados por coma.\n\nEjemplo: *SA10, SP1* - para ordenar una arepa con pulpo y queso amarillo. ✅\n\nℹ️ Si envias, más de 2 sabores: SA1, SP1, SA5 - No entendere. ❌`);
-                            } else {
-                                sendMessage(from, `*Sabores rellenos:*\n${menuSabores}\n\nℹ️ Responde solo con el código exacto de los sabores que deseas separados por coma.\n\nEjemplo: *SA1, SA7* - para ordenar una arepa con pollo y tocineta. ✅\n\nℹ️ Si envias, más de 2 sabores: SA1, SA7, SA5 - No entendere. ❌`);
-                            }
-                        })
-                        return; */
           } else {
             // Arepa sin sabores
             const producto = {
@@ -1248,103 +1182,7 @@ const listenMessage = () => {
           }
         }
 
-        // --- Lógica para selección de sabores individuales por arepa ---
-        /* if (
-          seleccionSaboresIndividual[from] &&
-          seleccionSaboresIndividual[from].esperando
-        ) {
-          // El usuario está eligiendo sabores para cada arepa, uno por uno
-          const codigos = body.split(",").map((s) => s.trim().toUpperCase());
-          const idx = seleccionSaboresIndividual[from].actual;
-          const tipo = seleccionSaboresIndividual[from].tipo;
-          let validos = false;
-          let sabores = [];
-
-          // Validación de hasta 2 sabores por arepa
-          if (tipo === "premium") {
-            validos =
-              codigos.length <= 2 &&
-              codigos.length > 0 &&
-              codigos.every(
-                (c) => catalogoSaboresCod[c] || catalogoSaboresPremiumCod[c]
-              );
-            if (validos) {
-              sabores = codigos.map(
-                (c) => catalogoSaboresCod[c] || catalogoSaboresPremiumCod[c]
-              );
-            }
-          } else {
-            validos =
-              codigos.length <= 2 &&
-              codigos.length > 0 &&
-              codigos.every((c) => catalogoSaboresCod[c]);
-            if (validos) {
-              sabores = codigos.map((c) => catalogoSaboresCod[c]);
-            }
-          }
-
-          if (!validos) {
-            sendMessage(
-              from,
-              `⚠️ Debes indicar hasta 2 códigos de sabor válidos para la arepa #${
-                idx + 1
-              }, separados por coma.\n\nEjemplo: SA1, SA7\n\nSabores disponibles:\n${
-                tipo === "premium"
-                  ? menuSabores + "\n" + menuSaboresPremium
-                  : menuSabores
-              }`
-            );
-            return;
-          }
-
-          // Guarda los sabores elegidos para la arepa actual
-          seleccionSaboresIndividual[from].sabores.push(sabores);
-          seleccionSaboresIndividual[from].actual++;
-
-          // Si faltan arepas, pide el siguiente sabor
-          if (
-            seleccionSaboresIndividual[from].actual <
-            seleccionSaboresIndividual[from].cantidad
-          ) {
-            sendMessage(
-              from,
-              `Ahora indica los sabores para la arepa #${
-                seleccionSaboresIndividual[from].actual + 1
-              }\n\nℹ️ Máximo 2, separados por coma.\n\nEjemplo: SA1, SA7 ✅`
-            );
-            return;
-          } else {
-            // Cuando termina, agrega cada arepa como producto individual con sus sabores
-            pedidos[from] = pedidos[from] || [];
-            for (
-              let i = 0;
-              i < seleccionSaboresIndividual[from].cantidad;
-              i++
-            ) {
-              const precioNum =
-                Number(seleccionSaboresIndividual[from].precio) || 0; // Fuerza tipo numérico
-              pedidos[from].push({
-                item: seleccionSaboresIndividual[from].nombre,
-                precio: precioNum,
-                cantidad: 1,
-                subtotal: precioNum,
-                sabores: seleccionSaboresIndividual[from].sabores[i],
-              });
-            }
-            iniciarTimeoutPedido(from);
-            sendMessage(
-              from,
-              `✅ ¡Listo! Agregamos ${seleccionSaboresIndividual[from].cantidad} arepas:\n` +
-                seleccionSaboresIndividual[from].sabores
-                  .map((sab, idx) => `- Arepa #${idx + 1}: ${sab.join(", ")}`)
-                  .join("\n") +
-                `\n\nPuedes seguir agregando productos de nuestros menú.\n\nℹ️ Escribe *A* para el menú de arepas.\n\nℹ️ Escribe *B* para el menú de hamburguesas.\n\nℹ️ Si tu pedido esté completo, escribe *V* para verlo.`
-            );
-            delete seleccionSaboresIndividual[from];
-            return;
-          }
-        }  */
-
+        // --- Lógica para captura de sabores individuales ---
         if (
           seleccionSaboresIndividual[from] &&
           seleccionSaboresIndividual[from].esperando
@@ -1682,7 +1520,6 @@ const sendMedia = (to, file, caption = "") => {
 const iniciarTimeoutPedido = (from) => {
   clearTimeout(pedidoTimeouts[from]);
   delete pedidoTimeouts[from];
-  /* limpiarEstadoCliente(from); */
   pedidoTimeouts[from] = setTimeout(() => {
     pedidos[from] = [];
     sendMessage(
@@ -1697,6 +1534,9 @@ function limpiarEstadoCliente(from) {
   delete seleccionSabores[from];
   delete seleccionSaboresIndividual[from];
   delete datosRecepcion[from];
+  if (typeof ultimoPedido !== "undefined" && ultimoPedido[from]) {
+    delete ultimoPedido[from];
+  }
   delete pedidoTimeouts[from];
   delete erroresUsuario[from];
   if (ultimoTimestamp[from]) {
@@ -1725,7 +1565,7 @@ setInterval(() => {
 // Global timestamp tracker for inactivity
 let ultimoTimestamp = {};
 function limpiarEstadosInactivos() {
-  const INACTIVIDAD_MAXIMA = 2 * 60 * 1000; // 2 minutos (ajusta si quieres 5)
+  const INACTIVIDAD_MAXIMA = 30 * 60 * 1000; // 30 minutos de inactividad maxima
   const ahora = Date.now();
   Object.keys(ultimoTimestamp).forEach((from) => {
     const diff = ahora - ultimoTimestamp[from];
@@ -1741,4 +1581,4 @@ function limpiarEstadosInactivos() {
 
 setInterval(() => {
   limpiarEstadosInactivos();
-}, 10 * 60 * 1000); // cada 10 minutos
+}, 10 * 60 * 1000); // cada 10 minutos los usuarios inactivos
