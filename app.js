@@ -262,7 +262,7 @@ async function resetSession() {
       authStrategy: new LocalAuth({ clientId: "default" }),
 
       puppeteer: {
-        executablePath: "/usr/bin/google-chrome", // o la ruta que te dé `which google-chrome`
+        /* executablePath: "/usr/bin/google-chrome", */ // o la ruta que te dé `which google-chrome`
         headless: true,
         args: ["--no-sandbox", "--disable-setuid-sandbox"],
       },
@@ -291,7 +291,7 @@ client = new Client({
   authStrategy: new LocalAuth({ clientId: "default" }),
 
   puppeteer: {
-    executablePath: "/usr/bin/google-chrome", // o la ruta que te dé `which google-chrome`
+    /* executablePath: "/usr/bin/google-chrome", */ // o la ruta que te dé `which google-chrome`
     headless: true,
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
   },
@@ -428,6 +428,7 @@ function getMenuSmashCod() {
 const listenMessage = () => {
   client.on("message", (msg) => {
     const { from, body } = msg;
+    ultimoTimestamp[from] = Date.now();
     if (!msg.hasMedia && (!body || !body.trim())) return;
     if (from === "status@broadcast") return;
     const texto = body.toLowerCase().trim();
@@ -636,7 +637,7 @@ const listenMessage = () => {
               delete ultimoPedido[from].esperandoPagoMovil;
               delete ultimoPedido[from].esperandoEfectivo;
               delete ultimoPedido[from];
-              /* limpiarEstadoCliente(from); */
+              limpiarEstadoCliente(from);
             }
           });
           return;
@@ -1680,8 +1681,8 @@ const sendMedia = (to, file, caption = "") => {
 
 const iniciarTimeoutPedido = (from) => {
   clearTimeout(pedidoTimeouts[from]);
-  //delete pedidoTimeouts[from];
-  limpiarEstadoCliente(from);
+  delete pedidoTimeouts[from];
+  /* limpiarEstadoCliente(from); */
   pedidoTimeouts[from] = setTimeout(() => {
     pedidos[from] = [];
     sendMessage(
@@ -1696,18 +1697,23 @@ function limpiarEstadoCliente(from) {
   delete seleccionSabores[from];
   delete seleccionSaboresIndividual[from];
   delete datosRecepcion[from];
-  delete ultimoPedido[from];
   delete pedidoTimeouts[from];
   delete erroresUsuario[from];
+  if (ultimoTimestamp[from]) {
+    console.log(
+      `[limpiarEstadoCliente] Eliminando timestamp de usuario: ${from}`
+    );
+    delete ultimoTimestamp[from];
+  }
 }
 
 process.on("uncaughtException", (err) => {
   console.error("Excepción no capturada:", err);
-  numeroAutorizado.forEach((num) => {
+  /* numeroAutorizado.forEach((num) => {
     setTimeout(() => {
       sendMessage(num, err);
     }, 5000);
-  });
+  }); */
   // Opcional: reiniciar el proceso o enviar alerta
 });
 
@@ -1716,14 +1722,14 @@ setInterval(() => {
   console.log(`Memoria usada: ${(mem.heapUsed / 1024 / 1024).toFixed(2)} MB`);
 }, 60000); // cada minuto
 
+// Global timestamp tracker for inactivity
+let ultimoTimestamp = {};
 function limpiarEstadosInactivos() {
-  const INACTIVIDAD_MAXIMA = 30 * 60 * 1000; // 30 minutos
+  const INACTIVIDAD_MAXIMA = 2 * 60 * 1000; // 2 minutos (ajusta si quieres 5)
   const ahora = Date.now();
-
-  Object.keys(pedidoTimeouts).forEach((from) => {
-    const timeout = pedidoTimeouts[from];
-    if (timeout && ahora - timeout._idleStart > INACTIVIDAD_MAXIMA) {
-      console.log(`[${from}] Eliminando estado por inactividad prolongada`);
+  Object.keys(ultimoTimestamp).forEach((from) => {
+    const diff = ahora - ultimoTimestamp[from];
+    if (diff > INACTIVIDAD_MAXIMA) {
       limpiarEstadoCliente(from);
       sendMessage(
         from,
