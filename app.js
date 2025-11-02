@@ -965,7 +965,6 @@ const listenMessage = () => {
         if (pedidoTimeouts[from]) {
           clearTimeout(pedidoTimeouts[from]);
           delete pedidoTimeouts[from];
-          limpiarEstadoCliente(from);
         }
         if (typeof ultimoPedido !== "undefined" && ultimoPedido[from]) {
           const { fecha, resumen, total } = ultimoPedido[from];
