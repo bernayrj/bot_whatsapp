@@ -50,6 +50,40 @@ let arepasCod = {};
 let menuArepazo = "";
 let client;
 
+// --- Manejo de cierre seguro de cliente y navegador ---
+//manejadores de salida segura de la aplicacion para evitar corrupcion de sesion
+async function gracefulShutdown(reason) {
+  try {
+    console.log(`Cerrando cliente por: ${reason}`);
+    if (client && typeof client.destroy === "function") {
+      await client.destroy();
+      console.log("Cliente destruido correctamente.");
+    }
+  } catch (e) {
+    console.error("Error al destruir cliente en shutdown:", e);
+  }
+}
+
+process.on("SIGINT", async () => {
+  await gracefulShutdown("SIGINT");
+  process.exit(0);
+});
+process.on("SIGTERM", async () => {
+  await gracefulShutdown("SIGTERM");
+  process.exit(0);
+});
+process.on("uncaughtException", async (err) => {
+  console.error("Excepción no capturada:", err);
+  await gracefulShutdown("uncaughtException");
+  process.exit(1);
+});
+process.on("exit", (code) => {
+  if (client && typeof client.destroy === "function") {
+    client.destroy().catch(() => {});
+  }
+  console.log("Proceso finalizado con código:", code);
+});
+
 // Ejecutar una vez al iniciar el bot
 actualizarTasa();
 // Al iniciar el bot, carga el menú de arepas
@@ -264,7 +298,34 @@ async function resetSession() {
       puppeteer: {
         /* executablePath: "/usr/bin/google-chrome", */ // o la ruta que te dé `which google-chrome`
         headless: true,
-        args: ["--no-sandbox", "--disable-setuid-sandbox"],
+        args: [
+          //nuevos argumentos
+          "--no-sandbox",
+          "--disable-setuid-sandbox",
+          "--disable-dev-shm-usage",
+          "--disable-gpu",
+          "--disable-software-rasterizer",
+          "--disable-background-networking",
+          "--disable-background-timer-throttling",
+          "--disable-client-side-phishing-detection",
+          "--disable-default-apps",
+          "--disable-sync",
+          "--disable-translate",
+          "--disable-features=site-per-process,TranslateUI",
+          "--disable-component-update",
+          "--disable-breakpad",
+          "--disable-crash-reporter",
+          "--disable-hang-monitor",
+          "--disable-popup-blocking",
+          "--disable-prompt-on-repost",
+          "--disable-renderer-backgrounding",
+          "--single-process",
+          "--no-zygote",
+          "--no-first-run",
+          "--no-default-browser-check",
+          "--disable-infobars",
+          "--disable-extensions",
+        ],
       },
     });
 
@@ -293,7 +354,34 @@ client = new Client({
   puppeteer: {
     /* executablePath: "/usr/bin/google-chrome", */ // o la ruta que te dé `which google-chrome`
     headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    args: [
+      //nuevos argumentos
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-gpu",
+      "--disable-software-rasterizer",
+      "--disable-background-networking",
+      "--disable-background-timer-throttling",
+      "--disable-client-side-phishing-detection",
+      "--disable-default-apps",
+      "--disable-sync",
+      "--disable-translate",
+      "--disable-features=site-per-process,TranslateUI",
+      "--disable-component-update",
+      "--disable-breakpad",
+      "--disable-crash-reporter",
+      "--disable-hang-monitor",
+      "--disable-popup-blocking",
+      "--disable-prompt-on-repost",
+      "--disable-renderer-backgrounding",
+      "--single-process",
+      "--no-zygote",
+      "--no-first-run",
+      "--no-default-browser-check",
+      "--disable-infobars",
+      "--disable-extensions",
+    ],
   },
 });
 
