@@ -86,10 +86,12 @@ process.on("exit", (code) => {
 
 // Ejecutar una vez al iniciar el bot
 actualizarTasa();
-// Al iniciar el bot, carga el menú de arepas
-cargarMenuArepazoDesdeBD();
 // Al iniciar el bot cargar zonas delivery
 cargarZonasDelivery();
+// Al iniciar el bot, carga el menú de arepas
+cargarMenuArepazoDesdeBD();
+// Al iniciar el bot, carga el menú de parrillazo
+cargarMenuParrillazoDesdeBD();
 
 // Permitir activar/desactivar log desde WhatsApp (solo número autorizado)
 function toggleLogConversaciones(activar) {
@@ -192,6 +194,48 @@ function cargarMenuArepazoDesdeBD(callback) {
       "\n\n🫓 *Arepas*\n" +
       Object.entries(arepasCod)
         .map(([cod, data]) => `- *${cod}*: ${data.nombre}  $${data.precio}\n`)
+        .join("") +
+      "\n\n🥤 *Bebidas*\n" +
+      Object.entries(bebidasCod)
+        .map(([cod, data]) => `- *${cod}*: ${data.nombre}  $${data.precio}\n`)
+        .join("");
+    if (callback) callback();
+  });
+}
+
+// Función para cargar menú parrillazo y bebidas desde BD
+function cargarMenuParrillazoDesdeBD(callback) {
+  db.query("CALL get_menu_parrillazo()", (err, results) => {
+    if (err) {
+      console.error("Error al obtener menú de parrillazo:", err);
+      return;
+    }
+    parrillaCod = {};
+    bebidasCod = {};
+    results[0].forEach((row) => {
+      if (row.categoria === "parrilla") {
+        parrillaCod[row.codigo] = {
+          nombre: row.nombre,
+          categoria: row.categoria,
+          descripcion: row.descripcion,
+          precio: row.precio,
+        };
+      } else if (row.categoria === "bebidas") {
+        bebidasCod[row.codigo] = {
+          nombre: row.nombre,
+          categoria: row.categoria,
+          precio: row.precio,
+        };
+      }
+    });
+    // Actualiza menú de texto
+    menuParrillazo =
+      "\n\n🥩 *Parrillas*\n" +
+      Object.entries(parrillaCod)
+        .map(
+          ([cod, data]) =>
+            `- *${cod}*: ${data.nombre}  $${data.precio}\n${data.descripcion}\n`
+        )
         .join("") +
       "\n\n🥤 *Bebidas*\n" +
       Object.entries(bebidasCod)
@@ -870,7 +914,7 @@ const listenMessage = () => {
       case "m":
         sendMessage(
           from,
-          "ℹ️ Escribe *A* para enviarte el menú del *Arepazo* (arepas).\n\nℹ️ Escribe *B* para enviarte el menú SmashRico (hamburguesas)."
+          "🫓 Escribe *A* para enviarte el menú del *Arepazo* (arepas).\n\n🍔 Escribe *B* para enviarte el menú *SmashRico* (hamburguesas).\n\n🥩 Escribe *P* para enviarte el menú *Parrillazo*."
         );
         break;
       case "arepa":
@@ -899,6 +943,19 @@ const listenMessage = () => {
           );
         }, 5000);
         break;
+      case "p":
+      case "parrilla":
+        pedidos[from] = pedidos[from] || [];
+        cargarMenuParrillazoDesdeBD(() => {
+          sendMedia(from, "parrillazo.jpg", menuParrillazo);
+          setTimeout(() => {
+            sendMessage(
+              from,
+              "ℹ️ Responde con la cantidad y el código del producto que quieres agregar al pedido.\n\nℹ️ Debes agregar un solo producto por mensaje.\n\nEjemplo: *2 PR1* ✅\nPara ordenar 2 parrillas grandes.\n\nSi envias: 2 PR1, 3 PR2, BE3 - No entendere. ❌"
+            );
+          }, 2000);
+        });
+        break;
       case "ver":
       case "v":
         if (pedidos[from] && pedidos[from].length > 0) {
@@ -916,7 +973,7 @@ const listenMessage = () => {
             resumen += `- ${item.cantidad} x ${item.item}${saboresTxt} $${item.precio} = $${item.subtotal}\n`;
             total += item.subtotal;
           });
-          resumen += `\n*Total: $${total}*`;
+          resumen += `\n*Total: $${total.toFixed(2)}*`;
           resumen += `\n*Total: Bs. ${(total * tasaActual).toFixed(2)}*`;
           sendMessage(from, resumen);
           setTimeout(() => {
@@ -968,7 +1025,7 @@ const listenMessage = () => {
               resumen += `- ${item.cantidad} x ${item.item}${saboresTxt} $${item.precio} = $${item.subtotal}\n`;
               total += item.subtotal;
             });
-            resumen += `\n*Total: $${total}*`;
+            resumen += `\n*Total: $${total.toFixed(2)}*`;
             resumen += `\n*Total: Bs. ${(total * tasaActual).toFixed(2)}*`;
 
             const nombreCliente = msg._data?.notifyName || "Desconocido";
@@ -1489,6 +1546,25 @@ const listenMessage = () => {
           sendMessage(
             from,
             `✅ Hemos agregado: ${producto.cantidad} x ${producto.item} ($${producto.precio} c/u) = $${producto.subtotal}\n\nPuedes seguir agregando productos de nuestros menú.\n\nℹ️Escribe *A* para menú de arepas.\n\nℹ️Escribe *B* para menú de hamburguesas.\n\nℹ️ Si tu pedido esta completo, escribe *V* para verlo.`
+          );
+          return;
+        }
+
+        // Parrilla
+        const matchCodigoParrilla = parrillaCod[nombreProducto.toUpperCase()];
+        if (matchCodigoParrilla) {
+          const producto = {
+            item: matchCodigoParrilla.nombre,
+            precio: matchCodigoParrilla.precio,
+            cantidad: cantidad,
+            subtotal: cantidad * matchCodigoParrilla.precio,
+          };
+          pedidos[from] = pedidos[from] || [];
+          pedidos[from].push(producto);
+          iniciarTimeoutPedido(from);
+          sendMessage(
+            from,
+            `✅ Hemos agregado: ${producto.cantidad} x ${producto.item} ($${producto.precio} c/u) = $${producto.subtotal}\n\nPuedes seguir agregando productos de nuestros menú.\n\nℹ️Escribe *A* para menú de arepas.\n\nℹ️Escribe *B* para menú de hamburguesas.\n\nℹ️Escribe *P* para menú de parrilla.\n\nℹ️ Si tu pedido esta completo, escribe *V* para verlo.`
           );
           return;
         }
