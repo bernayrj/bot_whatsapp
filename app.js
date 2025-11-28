@@ -128,10 +128,10 @@ cron.schedule("0 0 * * 2-6", () => {
   });
 });
 
-cron.schedule("15 15 * * 1-5", () => {
+/* cron.schedule("0 4 * * 1-5", () => {
   MODO_MANTENIMIENTO = true;
   sendMessage("584149071774@c.us", `Mantenimiento programado activado. 🤖⚙️`);
-});
+}); */
 
 // Traer los sabores disponibles de BD para las arepas
 function cargarSaboresDesdeBD(callback) {
