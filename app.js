@@ -4,6 +4,10 @@ const qrcode = require("qrcode-terminal");
 const fs = require("fs");
 const path = require("path");
 const mysql = require("mysql2");
+// Cargar variables de envase desde .env
+const ENVASE_DESCRIPCION =
+  process.env.ENVASE_DESCRIPCION || "Envase para llevar";
+const ENVASE_PRECIO = parseFloat(process.env.ENVASE_PRECIO || "0.50");
 const qrWeb = require("./qr-server");
 const { broadcastNewOrder } = require("./ws-server");
 const cron = require("node-cron");
@@ -122,6 +126,11 @@ cron.schedule("0 0 * * 2-6", () => {
       sendMessage(num, `✅ Tasa actualizada: Bs. ${tasaActual}`);
     }, 5000);
   });
+});
+
+cron.schedule("15 15 * * 1-5", () => {
+  MODO_MANTENIMIENTO = true;
+  sendMessage("584149071774@c.us", `Mantenimiento programado activado. 🤖⚙️`);
 });
 
 // Traer los sabores disponibles de BD para las arepas
@@ -1559,12 +1568,22 @@ const listenMessage = () => {
             cantidad: cantidad,
             subtotal: cantidad * matchCodigoParrilla.precio,
           };
+          // Item adicional de envase para llevar
+          const envase = {
+            item: ENVASE_DESCRIPCION,
+            precio: ENVASE_PRECIO,
+            cantidad: 1,
+            subtotal: ENVASE_PRECIO,
+            adicional: true,
+          };
           pedidos[from] = pedidos[from] || [];
           pedidos[from].push(producto);
+          pedidos[from].push(envase);
           iniciarTimeoutPedido(from);
           sendMessage(
             from,
-            `✅ Hemos agregado: ${producto.cantidad} x ${producto.item} ($${producto.precio} c/u) = $${producto.subtotal}\n\nPuedes seguir agregando productos de nuestros menú.\n\nℹ️Escribe *A* para menú de arepas.\n\nℹ️Escribe *B* para menú de hamburguesas.\n\nℹ️Escribe *P* para menú de parrilla.\n\nℹ️ Si tu pedido esta completo, escribe *V* para verlo.`
+            `✅ Hemos agregado: ${producto.cantidad} x ${producto.item} ($${producto.precio} c/u) = $${producto.subtotal}\n` +
+              `➕ ${envase.item} ($${envase.precio})\n\nPuedes seguir agregando productos de nuestros menú.\n\nℹ️Escribe *A* para menú de arepas.\n\nℹ️Escribe *B* para menú de hamburguesas.\n\nℹ️Escribe *P* para menú de parrilla.\n\nℹ️ Si tu pedido esta completo, escribe *V* para verlo.`
           );
           return;
         }
