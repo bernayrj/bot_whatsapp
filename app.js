@@ -1572,8 +1572,8 @@ const listenMessage = () => {
           const envase = {
             item: ENVASE_DESCRIPCION,
             precio: ENVASE_PRECIO,
-            cantidad: 1,
-            subtotal: ENVASE_PRECIO,
+            cantidad: cantidad,
+            subtotal: ENVASE_PRECIO * cantidad,
             adicional: true,
           };
           pedidos[from] = pedidos[from] || [];
@@ -1583,7 +1583,7 @@ const listenMessage = () => {
           sendMessage(
             from,
             `✅ Hemos agregado: ${producto.cantidad} x ${producto.item} ($${producto.precio} c/u) = $${producto.subtotal}\n` +
-              `➕ ${envase.item} ($${envase.precio})\n\nPuedes seguir agregando productos de nuestros menú.\n\nℹ️Escribe *A* para menú de arepas.\n\nℹ️Escribe *B* para menú de hamburguesas.\n\nℹ️Escribe *P* para menú de parrilla.\n\nℹ️ Si tu pedido esta completo, escribe *V* para verlo.`
+              `➕ ${envase.item} (${envase.cantidad} x $${envase.precio} c/u) = $${envase.subtotal}\n\nPuedes seguir agregando productos de nuestros menú.\n\nℹ️Escribe *A* para menú de arepas.\n\nℹ️Escribe *B* para menú de hamburguesas.\n\nℹ️Escribe *P* para menú de parrilla.\n\nℹ️ Si tu pedido esta completo, escribe *V* para verlo.`
           );
           return;
         }
