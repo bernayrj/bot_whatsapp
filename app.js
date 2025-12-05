@@ -470,7 +470,7 @@ const LIMITE_ERRORES = 3;
 // Catálogos SOLO por código
 
 const hamburguesasCod = {
-  HB1: {
+  /* HB1: {
     nombre: "Smash burger",
     descripcion: "Pan de batata, carne smash, queso, ketchup y mayonesa",
     precios: { S: 3, P: 4, C: 6 },
@@ -521,7 +521,7 @@ const hamburguesasCod = {
     nombre: "Keto Burger",
     descripcion: "Lechuga, carne, tocienta, ketchup y mayonesa",
     precios: { S: 3.5, P: 4.5, C: 6.5 },
-  },
+  }, */
 };
 
 const nuggetsCod = {
