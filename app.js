@@ -470,7 +470,7 @@ const LIMITE_ERRORES = 3;
 // Catálogos SOLO por código
 
 const hamburguesasCod = {
-  /* HB1: {
+  HB1: {
     nombre: "Smash burger",
     descripcion: "Pan de batata, carne smash, queso, ketchup y mayonesa",
     precios: { S: 3, P: 4, C: 6 },
@@ -521,7 +521,7 @@ const hamburguesasCod = {
     nombre: "Keto Burger",
     descripcion: "Lechuga, carne, tocienta, ketchup y mayonesa",
     precios: { S: 3.5, P: 4.5, C: 6.5 },
-  }, */
+  },
 };
 
 const nuggetsCod = {
@@ -675,7 +675,7 @@ const listenMessage = () => {
           sendMessage(from, resumenConDatos);
           sendMessage(
             from,
-            "¿Cómo deseas pagar?\n\n💵 Efectivo\n 📲Pago Movil\n💳 Punto\n\nResponde con _*EFECTIVO*_, _*PAGO MOVIL*_ o _*PUNTO*_"
+            "¿Cómo deseas pagar?\n\n 📲Pago Movil\n💳 Punto\n\nResponde con: _*PAGO MOVIL*_ o _*PUNTO*_"
           );
         }
         delete datosRecepcion[from];
@@ -1097,7 +1097,7 @@ const listenMessage = () => {
           );
         }
         break;
-      case "efectivo":
+      /* case "efectivo":
         if (pedidoTimeouts[from]) {
           clearTimeout(pedidoTimeouts[from]);
           delete pedidoTimeouts[from];
@@ -1114,7 +1114,7 @@ const listenMessage = () => {
             "⚠️ No existe ningun pedido, escribe *D* para iniciar."
           );
         }
-        break;
+        break; */
       case "punto":
         if (pedidoTimeouts[from]) {
           clearTimeout(pedidoTimeouts[from]);
