@@ -923,7 +923,7 @@ const listenMessage = () => {
       case "m":
         sendMessage(
           from,
-          "🫓 Escribe *A* para enviarte el menú del *Arepazo* (arepas).\n\n🍔 Escribe *B* para enviarte el menú *SmashRico* (hamburguesas).\n\n🥩 Escribe *P* para enviarte el menú *Parrillazo*."
+          "🫓 Escribe *A* para enviarte el menú del *Arepazo* (arepas).\n\n🍔 Escribe *B* para enviarte el menú *SmashRico* (hamburguesas).\n\n🥩 Escribe *PR* para enviarte el menú *Parrillazo*."
         );
         break;
       case "arepa":
@@ -952,7 +952,7 @@ const listenMessage = () => {
           );
         }, 5000);
         break;
-      case "p":
+      case "pr":
       case "parrilla":
         pedidos[from] = pedidos[from] || [];
         cargarMenuParrillazoDesdeBD(() => {
