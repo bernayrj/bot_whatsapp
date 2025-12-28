@@ -494,12 +494,12 @@ const hamburguesasCod = {
   HB5: {
     nombre: "Doble Clásica",
     descripcion: "Doble carne",
-    precios: { S: 5.5, P: 6.5, C: 8.5 },
+    precios: { S: 6, P: 7, C: 9 },
   },
   HB6: {
     nombre: "Triple Clásica",
     descripcion: "Triple carne",
-    precios: { S: 7, P: 8, C: 10 },
+    precios: { S: 7.5, P: 8.5, C: 10.5 },
   },
   HB7: {
     nombre: "Smash Rico",
@@ -514,8 +514,8 @@ const hamburguesasCod = {
   },
   HB9: {
     nombre: "Triple Smash Rico",
-    descripcion: "Triple carne",
-    precios: { S: 6, P: 7, C: 9 },
+    descripcion: "T riple carne",
+    precios: { S: 6.5, P: 7.5, C: 9.5 },
   },
   HB10: {
     nombre: "Keto Burger",
@@ -525,15 +525,15 @@ const hamburguesasCod = {
 };
 
 const nuggetsCod = {
-  NG1: { nombre: "Nuggets de 4 piezas", precios: { S: 1.5, P: 2.5, C: 4.5 } },
-  NG2: { nombre: "Nuggets de 6 piezas", precios: { S: 2, P: 3, C: 5 } },
-  NG3: { nombre: "Nuggets de 10 piezas", precios: { S: 4.5, P: 5.5, C: 7.5 } },
+  /* NG1: { nombre: "Nuggets de 4 piezas", precios: { S: 1.5, P: 2.5, C: 4.5 } }, */
+  NG1: { nombre: "Nuggets de 6 piezas", precios: { S: 2, P: 3, C: 5 } },
+  NG2: { nombre: "Nuggets de 10 piezas", precios: { S: 4.5, P: 5.5, C: 7.5 } },
 };
 
 const papasCod = {
   PA1: { nombre: "Papas clásicas", precio: 1 },
   PA2: { nombre: "Canoa familiar", precio: 2 },
-  PA3: { nombre: "Canoa papas queso y tocineta", precio: 3.5 },
+  PA3: { nombre: "Canoa papas queso y tocineta", precio: 4.5 },
 };
 
 const variantesBurger = {
@@ -1097,7 +1097,7 @@ const listenMessage = () => {
           );
         }
         break;
-      /* case "efectivo":
+      /* case "efectivo Divisas":
         if (pedidoTimeouts[from]) {
           clearTimeout(pedidoTimeouts[from]);
           delete pedidoTimeouts[from];
