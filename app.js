@@ -202,11 +202,11 @@ function cargarMenuArepazoDesdeBD(callback) {
     menuArepazo =
       "\n\n🫓 *Arepas*\n" +
       Object.entries(arepasCod)
-        .map(([cod, data]) => `- *${cod}*: ${data.nombre}  $${data.precio}\n`)
+        .map(([cod, data]) => `- *${cod}*: ${data.nombre}  $€{data.precio}\n`)
         .join("") +
       "\n\n🥤 *Bebidas*\n" +
       Object.entries(bebidasCod)
-        .map(([cod, data]) => `- *${cod}*: ${data.nombre}  $${data.precio}\n`)
+        .map(([cod, data]) => `- *${cod}*: ${data.nombre}  $€{data.precio}\n`)
         .join("");
     if (callback) callback();
   });
@@ -243,12 +243,12 @@ function cargarMenuParrillazoDesdeBD(callback) {
       Object.entries(parrillaCod)
         .map(
           ([cod, data]) =>
-            `- *${cod}*: ${data.nombre}  $${data.precio}\n${data.descripcion}\n`
+            `- *${cod}*: ${data.nombre}  $€{data.precio}\n${data.descripcion}\n`
         )
         .join("") +
       "\n\n🥤 *Bebidas*\n" +
       Object.entries(bebidasCod)
-        .map(([cod, data]) => `- *${cod}*: ${data.nombre}  $${data.precio}\n`)
+        .map(([cod, data]) => `- *${cod}*: ${data.nombre}  $€{data.precio}\n`)
         .join("");
     if (callback) callback();
   });
@@ -273,7 +273,7 @@ function cargarZonasDelivery(callback) {
     zonaDelivery =
       "🛵 *Delivery* 🛵\n" +
       Object.entries(zonasCod)
-        .map(([cod, data]) => `- *${cod}*: ${data.nombre}  $${data.precio}\n`)
+        .map(([cod, data]) => `- *${cod}*: ${data.nombre}  $€{data.precio}\n`)
         .join("");
     if (callback) callback();
   });
@@ -470,7 +470,7 @@ const LIMITE_ERRORES = 3;
 // Catálogos SOLO por código
 
 const hamburguesasCod = {
-  HB1: {
+  /* HB1: {
     nombre: "Smash burger",
     descripcion: "Pan de batata, carne smash, queso, ketchup y mayonesa",
     precios: { S: 3, P: 4, C: 6 },
@@ -521,7 +521,7 @@ const hamburguesasCod = {
     nombre: "Keto Burger",
     descripcion: "Lechuga, carne, tocienta, ketchup y mayonesa",
     precios: { S: 3.5, P: 4.5, C: 6.5 },
-  },
+  }, */
 };
 
 const nuggetsCod = {
@@ -555,11 +555,11 @@ function getMenuSmashCod() {
   });
   menu += "\n🍟 *Papas fritas*\n";
   Object.entries(papasCod).forEach(([cod, data]) => {
-    menu += `- *${cod}*: ${data.nombre}  $${data.precio}\n`;
+    menu += `- *${cod}*: ${data.nombre}  $€{data.precio}\n`;
   });
   menu += "\n🥤 *Bebidas*\n";
   Object.entries(bebidasCod).forEach(([cod, data]) => {
-    menu += `- *${cod}*: ${data.nombre}  $${data.precio}\n`;
+    menu += `- *${cod}*: ${data.nombre}  $€{data.precio}\n`;
   });
   /*  menu += '\nℹ️ Responde con la cantidad y el código del producto que quieres agregar al pedido.\n\nEjemplo: 2 HB1 - para ordenar 2 smash burger. ✅*‼️\n\nDebes agregar un producto un solo producto por mensaje.*\n\nSi envias: 2 HB1, PA2 - No entedere. ❌'; */
   return menu;
@@ -979,10 +979,10 @@ const listenMessage = () => {
             ) {
               saboresTxt = ` [Sabores: ${item.sabores.join(", ")}]`;
             }
-            resumen += `- ${item.cantidad} x ${item.item}${saboresTxt} $${item.precio} = $${item.subtotal}\n`;
+            resumen += `- ${item.cantidad} x ${item.item}${saboresTxt} $€{item.precio} = $€{item.subtotal}\n`;
             total += item.subtotal;
           });
-          resumen += `\n*Total: $${total.toFixed(2)}*`;
+          resumen += `\n*Total: $€{total.toFixed(2)}*`;
           resumen += `\n*Total: Bs. ${(total * tasaActual).toFixed(2)}*`;
           sendMessage(from, resumen);
           setTimeout(() => {
@@ -1031,10 +1031,10 @@ const listenMessage = () => {
               ) {
                 saboresTxt = ` [Sabores: ${item.sabores.join(", ")}]`;
               }
-              resumen += `- ${item.cantidad} x ${item.item}${saboresTxt} $${item.precio} = $${item.subtotal}\n`;
+              resumen += `- ${item.cantidad} x ${item.item}${saboresTxt} $€{item.precio} = $€{item.subtotal}\n`;
               total += item.subtotal;
             });
-            resumen += `\n*Total: $${total.toFixed(2)}*`;
+            resumen += `\n*Total: $€{total.toFixed(2)}*`;
             resumen += `\n*Total: Bs. ${(total * tasaActual).toFixed(2)}*`;
 
             const nombreCliente = msg._data?.notifyName || "Desconocido";
@@ -1266,7 +1266,7 @@ const listenMessage = () => {
             iniciarTimeoutPedido(from);
             sendMessage(
               from,
-              `✅ Hemos agregado: ${producto.cantidad} x ${producto.item} ($${producto.precio} c/u) = $${producto.subtotal}\n\nPuedes seguir agregando productos de nuestros menú.\n\nℹ️Escribe *A* para menú de arepas.\n\nℹ️Escribe *B* para menú de hamburguesas.\n\nℹ️ Si tu pedido esta completo, escribe *V* para verlo.`
+              `✅ Hemos agregado: ${producto.cantidad} x ${producto.item} ($€{producto.precio} c/u) = $€{producto.subtotal}\n\nPuedes seguir agregando productos de nuestros menú.\n\nℹ️Escribe *A* para menú de arepas.\n\nℹ️Escribe *B* para menú de hamburguesas.\n\nℹ️ Si tu pedido esta completo, escribe *V* para verlo.`
             );
             return;
           }
@@ -1457,7 +1457,7 @@ const listenMessage = () => {
           };
           sendMessage(
             from,
-            `¿Cómo deseas tu ${matchCodigoBurger.nombre}?\nResponde con:\n*S* para sola ($${matchCodigoBurger.precios.S})\n*P* para con papas ($${matchCodigoBurger.precios.P})\n*C* para en combo ($${matchCodigoBurger.precios.C})`
+            `¿Cómo deseas tu ${matchCodigoBurger.nombre}?\nResponde con:\n*S* para sola ($€{matchCodigoBurger.precios.S})\n*P* para con papas ($€{matchCodigoBurger.precios.P})\n*C* para en combo ($€{matchCodigoBurger.precios.C})`
           );
           return;
         }
@@ -1481,7 +1481,7 @@ const listenMessage = () => {
             iniciarTimeoutPedido(from);
             sendMessage(
               from,
-              `✅ Hemos agregado: ${producto.cantidad} x ${producto.item} ($${producto.precio} c/u) = $${producto.subtotal}\n\nPuedes seguir agregando productos de nuestros menú.\n\nℹ️Escribe *A* para menú de arepas.\n\nℹ️Escribe *B* para menú de hamburguesas.\n\nℹ️ Si tu pedido esta completo, escribe *V* para verlo.`
+              `✅ Hemos agregado: ${producto.cantidad} x ${producto.item} ($€{producto.precio} c/u) = $€{producto.subtotal}\n\nPuedes seguir agregando productos de nuestros menú.\n\nℹ️Escribe *A* para menú de arepas.\n\nℹ️Escribe *B* para menú de hamburguesas.\n\nℹ️ Si tu pedido esta completo, escribe *V* para verlo.`
             );
           } else {
             sendMessage(
@@ -1505,7 +1505,7 @@ const listenMessage = () => {
           };
           sendMessage(
             from,
-            `¿Cómo deseas tus ${matchCodigoNugget.nombre}?\nResponde con:\n*S* para solo ($${matchCodigoNugget.precios.S})\n*P* para con papas ($${matchCodigoNugget.precios.P})\n*C* para en combo ($${matchCodigoNugget.precios.C})`
+            `¿Cómo deseas tus ${matchCodigoNugget.nombre}?\nResponde con:\n*S* para solo ($€{matchCodigoNugget.precios.S})\n*P* para con papas ($€{matchCodigoNugget.precios.P})\n*C* para en combo ($€{matchCodigoNugget.precios.C})`
           );
           return;
         }
@@ -1529,7 +1529,7 @@ const listenMessage = () => {
             iniciarTimeoutPedido(from);
             sendMessage(
               from,
-              `✅ Hemos agregado: ${producto.cantidad} x ${producto.item} ($${producto.precio} c/u) = $${producto.subtotal}\n\nPuedes seguir agregando productos de nuestros menú.\n\nℹ️Escribe *A* para menú de arepas.\n\nℹ️Escribe *B* para menú de hamburguesas.\n\nℹ️ Si tu pedido esta completo, escribe *V* para verlo.`
+              `✅ Hemos agregado: ${producto.cantidad} x ${producto.item} ($€{producto.precio} c/u) = $€{producto.subtotal}\n\nPuedes seguir agregando productos de nuestros menú.\n\nℹ️Escribe *A* para menú de arepas.\n\nℹ️Escribe *B* para menú de hamburguesas.\n\nℹ️ Si tu pedido esta completo, escribe *V* para verlo.`
             );
           } else {
             sendMessage(
@@ -1554,7 +1554,7 @@ const listenMessage = () => {
           iniciarTimeoutPedido(from);
           sendMessage(
             from,
-            `✅ Hemos agregado: ${producto.cantidad} x ${producto.item} ($${producto.precio} c/u) = $${producto.subtotal}\n\nPuedes seguir agregando productos de nuestros menú.\n\nℹ️Escribe *A* para menú de arepas.\n\nℹ️Escribe *B* para menú de hamburguesas.\n\nℹ️ Si tu pedido esta completo, escribe *V* para verlo.`
+            `✅ Hemos agregado: ${producto.cantidad} x ${producto.item} ($€{producto.precio} c/u) = $€{producto.subtotal}\n\nPuedes seguir agregando productos de nuestros menú.\n\nℹ️Escribe *A* para menú de arepas.\n\nℹ️Escribe *B* para menú de hamburguesas.\n\nℹ️ Si tu pedido esta completo, escribe *V* para verlo.`
           );
           return;
         }
@@ -1582,8 +1582,8 @@ const listenMessage = () => {
           iniciarTimeoutPedido(from);
           sendMessage(
             from,
-            `✅ Hemos agregado: ${producto.cantidad} x ${producto.item} ($${producto.precio} c/u) = $${producto.subtotal}\n` +
-              `➕ ${envase.item} (${envase.cantidad} x $${envase.precio} c/u) = $${envase.subtotal}\n\nPuedes seguir agregando productos de nuestros menú.\n\nℹ️Escribe *A* para menú de arepas.\n\nℹ️Escribe *B* para menú de hamburguesas.\n\nℹ️Escribe *P* para menú de parrilla.\n\nℹ️ Si tu pedido esta completo, escribe *V* para verlo.`
+            `✅ Hemos agregado: ${producto.cantidad} x ${producto.item} ($€{producto.precio} c/u) = $€{producto.subtotal}\n` +
+              `➕ ${envase.item} (${envase.cantidad} x $€{envase.precio} c/u) = $€{envase.subtotal}\n\nPuedes seguir agregando productos de nuestros menú.\n\nℹ️Escribe *A* para menú de arepas.\n\nℹ️Escribe *B* para menú de hamburguesas.\n\nℹ️Escribe *P* para menú de parrilla.\n\nℹ️ Si tu pedido esta completo, escribe *V* para verlo.`
           );
           return;
         }
@@ -1634,7 +1634,7 @@ const listenMessage = () => {
             iniciarTimeoutPedido(from);
             sendMessage(
               from,
-              `✅ Hemos agregado: ${producto.cantidad} x ${producto.item} ($${producto.precio} c/u) = $${producto.subtotal}\n\nPuedes seguir agregando productos de nuestros menú.\n\nℹ️Escribe *A* para menú de arepas.\n\nℹ️Escribe *B* para menú de hamburguesas.\n\nℹ️ Si tu pedido esta completo, escribe *V* para verlo.`
+              `✅ Hemos agregado: ${producto.cantidad} x ${producto.item} ($€{producto.precio} c/u) = $€{producto.subtotal}\n\nPuedes seguir agregando productos de nuestros menú.\n\nℹ️Escribe *A* para menú de arepas.\n\nℹ️Escribe *B* para menú de hamburguesas.\n\nℹ️ Si tu pedido esta completo, escribe *V* para verlo.`
             );
             return;
           }
