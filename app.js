@@ -359,7 +359,7 @@ async function resetSession() {
       puppeteer: {
         /* executablePath: "/usr/bin/google-chrome", */ // o la ruta que te dé `which google-chrome`
         headless: true,
-        args: [
+        /* args: [
           //nuevos argumentos
           "--no-sandbox",
           "--disable-setuid-sandbox",
@@ -386,7 +386,7 @@ async function resetSession() {
           "--no-default-browser-check",
           "--disable-infobars",
           "--disable-extensions",
-        ],
+        ], */
       },
     });
 
@@ -415,7 +415,7 @@ client = new Client({
   puppeteer: {
     /* executablePath: "/usr/bin/google-chrome", */ // o la ruta que te dé `which google-chrome`
     headless: true,
-    args: [
+    /* args: [
       //nuevos argumentos
       "--no-sandbox",
       "--disable-setuid-sandbox",
@@ -442,7 +442,7 @@ client = new Client({
       "--no-default-browser-check",
       "--disable-infobars",
       "--disable-extensions",
-    ],
+    ], */
   },
 });
 
@@ -535,7 +535,7 @@ const hamburguesasCod = {
 const nuggetsCod = {
   /* NG1: { nombre: "Nuggets de 4 piezas", precios: { S: 1.5, P: 2.5, C: 4.5 } }, */
   NG1: { nombre: "Nuggets de 6 piezas", precios: { S: 3, P: 5, C: 7 } },
-  NG2: { nombre: "Nuggets de 10 piezas", precios: { S: 5.5, P: 6.5, C: 9.5 } },
+  NG2: { nombre: "Nuggets de 10 piezas", precios: { S: 5.5, P: 7.5, C: 9.5 } },
 };
 
 const papasCod = {
@@ -707,8 +707,10 @@ const listenMessage = () => {
       if (typeof ultimoPedido !== "undefined" && ultimoPedido[from]) {
         const tipoPago = ultimoPedido[from].esperandoPagoMovil
           ? "Pago Movil"
-          : ultimoPedido[from].esperandoEfectivo
-          ? "Efectivo"
+          : ultimoPedido[from].esperandoEfectivoDivisas
+          ? "Efectivo Divisas"
+          : ultimoPedido[from].esperandoEfectivoBs
+          ? "Efectivo Bs."
           : null;
 
         if (tipoPago) {
@@ -1105,7 +1107,7 @@ const listenMessage = () => {
           );
         }
         break;
-      /* case "efectivo Divisas":
+      case "efectivo Divisas":
         if (pedidoTimeouts[from]) {
           clearTimeout(pedidoTimeouts[from]);
           delete pedidoTimeouts[from];
@@ -1115,14 +1117,33 @@ const listenMessage = () => {
             from,
             "💵 Envianos una foto del billete con que vas a pagar tu pedido"
           );
-          ultimoPedido[from].esperandoEfectivo = true;
+          ultimoPedido[from].esperandoEfectivoDivisas = true;
         } else {
           sendMessage(
             from,
             "⚠️ No existe ningun pedido, escribe *D* para iniciar."
           );
         }
-        break; */
+        break;
+
+      case "efectivo Bs.":
+        if (pedidoTimeouts[from]) {
+          clearTimeout(pedidoTimeouts[from]);
+          delete pedidoTimeouts[from];
+        }
+        if (typeof ultimoPedido !== "undefined" && ultimoPedido[from]) {
+          sendMessage(
+            from,
+            "💵 Envianos una foto del billete con que vas a pagar tu pedido"
+          );
+          ultimoPedido[from].esperandoEfectivoBs = true;
+        } else {
+          sendMessage(
+            from,
+            "⚠️ No existe ningun pedido, escribe *D* para iniciar."
+          );
+        }
+        break;
       case "punto":
         if (pedidoTimeouts[from]) {
           clearTimeout(pedidoTimeouts[from]);
