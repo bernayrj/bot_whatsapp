@@ -48,7 +48,7 @@ let menuSaboresPremium = "";
 let menuSaboresRefresco = "";
 let menuSaboresLipton = "";
 let LOG_CONVERSACIONES = true;
-let MODO_MANTENIMIENTO = false;
+let MODO_MANTENIMIENTO = true;
 let tasaActual = "";
 let arepasCod = {};
 let menuArepazo = "";
@@ -359,7 +359,7 @@ async function resetSession() {
       puppeteer: {
         /* executablePath: "/usr/bin/google-chrome", */ // o la ruta que te dé `which google-chrome`
         headless: true,
-        /* args: [
+        args: [
           //nuevos argumentos
           "--no-sandbox",
           "--disable-setuid-sandbox",
@@ -386,7 +386,7 @@ async function resetSession() {
           "--no-default-browser-check",
           "--disable-infobars",
           "--disable-extensions",
-        ], */
+        ],
       },
     });
 
@@ -415,7 +415,7 @@ client = new Client({
   puppeteer: {
     /* executablePath: "/usr/bin/google-chrome", */ // o la ruta que te dé `which google-chrome`
     headless: true,
-    /* args: [
+    args: [
       //nuevos argumentos
       "--no-sandbox",
       "--disable-setuid-sandbox",
@@ -442,7 +442,7 @@ client = new Client({
       "--no-default-browser-check",
       "--disable-infobars",
       "--disable-extensions",
-    ], */
+    ],
   },
 });
 
@@ -539,8 +539,8 @@ const nuggetsCod = {
 };
 
 const papasCod = {
-  PA1: { nombre: "Papas clásicas", precio: 1 },
-  PA2: { nombre: "Canoa familiar", precio: 2 },
+  PA1: { nombre: "Papas clásicas", precio: 2 },
+  PA2: { nombre: "Canoa familiar", precio: 3 },
   PA3: { nombre: "Canoa papas queso y tocineta", precio: 4.5 },
 };
 
@@ -1107,7 +1107,7 @@ const listenMessage = () => {
           );
         }
         break;
-      case "efectivo Divisas":
+      /*case "efectivo Divisas":
         if (pedidoTimeouts[from]) {
           clearTimeout(pedidoTimeouts[from]);
           delete pedidoTimeouts[from];
@@ -1143,7 +1143,7 @@ const listenMessage = () => {
             "⚠️ No existe ningun pedido, escribe *D* para iniciar."
           );
         }
-        break;
+        break;*/
       case "punto":
         if (pedidoTimeouts[from]) {
           clearTimeout(pedidoTimeouts[from]);
