@@ -1205,8 +1205,7 @@ const listenMessage = () => {
           actualizarTasa();
           sendMessage(
             from,
-            "✅ Tasa de cambio (EURO) actualizada correctamnete Bs." +
-              tasaActual
+            "✅ Tasa de cambio actualizada correctamnete Bs." + tasaActual
           );
         } else {
           sendMessage(from, "⚠️ No podemos entender tu orden");
