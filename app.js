@@ -101,7 +101,7 @@ cargarMenuParrillazoDesdeBD();
 function toggleLogConversaciones(activar) {
   LOG_CONVERSACIONES = activar;
   console.log(
-    `LOG_CONVERSACIONES: ${LOG_CONVERSACIONES ? "ACTIVADO" : "DESACTIVADO"}`
+    `LOG_CONVERSACIONES: ${LOG_CONVERSACIONES ? "ACTIVADO" : "DESACTIVADO"}`,
   );
 }
 
@@ -177,12 +177,14 @@ function cargarSaboresDesdeBD(callback) {
 // Función para cargar menú de arepas y bebidas desde BD
 function cargarMenuArepazoDesdeBD(callback) {
   db.query("CALL get_menu_arepazo()", (err, results) => {
+    console.log("Cargando menú de arepas desde BD...", results);
     if (err) {
       console.error("Error al obtener menú de arepas:", err);
       return;
     }
     arepasCod = {};
     bebidasCod = {};
+    otrosCod = {};
     results[0].forEach((row) => {
       if (row.categoria === "arepas") {
         arepasCod[row.codigo] = {
@@ -196,6 +198,13 @@ function cargarMenuArepazoDesdeBD(callback) {
           categoria: row.categoria,
           precio: row.precio,
         };
+      } else if (row.categoria === "otros") {
+        otrosCod[row.codigo] = {
+          nombre: row.nombre,
+          descripcion: row.descripcion,
+          categoria: row.categoria,
+          precio: row.precio,
+        };
       }
     });
     // Actualiza menú de texto
@@ -203,13 +212,20 @@ function cargarMenuArepazoDesdeBD(callback) {
       "\n\n🫓 *Arepas*\n" +
       Object.entries(arepasCod)
         .map(
-          ([cod, data]) => `- *${cod}*: ${data.nombre}  REF.${data.precio}\n`
+          ([cod, data]) => `- *${cod}*: ${data.nombre}  REF.${data.precio}\n`,
+        )
+        .join("") +
+      "\n\n🥟 *Otros*\n" +
+      Object.entries(otrosCod)
+        .map(
+          ([cod, data]) =>
+            `- *${cod}*: ${data.nombre}: ${data.descripcion}  REF.${data.precio}\n`,
         )
         .join("") +
       "\n\n🥤 *Bebidas*\n" +
       Object.entries(bebidasCod)
         .map(
-          ([cod, data]) => `- *${cod}*: ${data.nombre}  REF.${data.precio}\n`
+          ([cod, data]) => `- *${cod}*: ${data.nombre}  REF.${data.precio}\n`,
         )
         .join("");
     if (callback) callback();
@@ -247,13 +263,13 @@ function cargarMenuParrillazoDesdeBD(callback) {
       Object.entries(parrillaCod)
         .map(
           ([cod, data]) =>
-            `- *${cod}*: ${data.nombre}  REF.${data.precio}\n${data.descripcion}\n`
+            `- *${cod}*: ${data.nombre}  REF.${data.precio}\n${data.descripcion}\n`,
         )
         .join("") +
       "\n\n🥤 *Bebidas*\n" +
       Object.entries(bebidasCod)
         .map(
-          ([cod, data]) => `- *${cod}*: ${data.nombre}  REF.${data.precio}\n`
+          ([cod, data]) => `- *${cod}*: ${data.nombre}  REF.${data.precio}\n`,
         )
         .join("");
     if (callback) callback();
@@ -280,7 +296,7 @@ function cargarZonasDelivery(callback) {
       "🛵 *Delivery* 🛵\n" +
       Object.entries(zonasCod)
         .map(
-          ([cod, data]) => `- *${cod}*: ${data.nombre}  REF.${data.precio}\n`
+          ([cod, data]) => `- *${cod}*: ${data.nombre}  REF.${data.precio}\n`,
         )
         .join("");
     if (callback) callback();
@@ -356,10 +372,26 @@ async function resetSession() {
     client = new Client({
       authStrategy: new LocalAuth({ clientId: "default" }),
 
+      // Configuración para evitar bloqueos por parte de WhatsApp
+      webVersionCache: {
+        type: "remote",
+        remotePath:
+          "https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.2412.54.html",
+      },
+
       puppeteer: {
         /* executablePath: "/usr/bin/google-chrome", */ // o la ruta que te dé `which google-chrome`
         headless: true,
         args: [
+          "--no-sandbox",
+          "--disable-setuid-sandbox",
+          "--disable-dev-shm-usage",
+          "--disable-accelerated-2d-canvas", // Recomendado
+          "--no-first-run",
+          "--no-zygote",
+          "--disable-gpu",
+        ],
+        /* args: [
           //nuevos argumentos
           "--no-sandbox",
           "--disable-setuid-sandbox",
@@ -386,7 +418,7 @@ async function resetSession() {
           "--no-default-browser-check",
           "--disable-infobars",
           "--disable-extensions",
-        ],
+        ], */
       },
     });
 
@@ -412,10 +444,25 @@ function logConversacion(from, quien, mensaje) {
 client = new Client({
   authStrategy: new LocalAuth({ clientId: "default" }),
 
+  webVersionCache: {
+    type: "remote",
+    remotePath:
+      "https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.2412.54.html",
+  },
+
   puppeteer: {
     /* executablePath: "/usr/bin/google-chrome", */ // o la ruta que te dé `which google-chrome`
     headless: true,
     args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-accelerated-2d-canvas", // Recomendado
+      "--no-first-run",
+      "--no-zygote",
+      "--disable-gpu",
+    ],
+    /* args: [
       //nuevos argumentos
       "--no-sandbox",
       "--disable-setuid-sandbox",
@@ -442,7 +489,7 @@ client = new Client({
       "--no-default-browser-check",
       "--disable-infobars",
       "--disable-extensions",
-    ],
+    ], */
   },
 });
 
@@ -586,7 +633,7 @@ const listenMessage = () => {
     if (MODO_MANTENIMIENTO && !numeroAutorizado.includes(from)) {
       sendMessage(
         from,
-        "⚠️ Nos encontramos en mantenimiento de nuestro sistema automatizado de pedidos (bot). Para ordenar comunicate al 0414-3354594. Gracias por tu comprensón."
+        "⚠️ Nos encontramos en mantenimiento de nuestro sistema automatizado de pedidos (bot). Para ordenar comunicate al 0414-3354594. Gracias por tu comprensón.",
       );
       return;
     }
@@ -607,7 +654,7 @@ const listenMessage = () => {
         MODO_MANTENIMIENTO = true;
         sendMessage(
           from,
-          "✅ Modo mantenimiento ACTIVADO. Los usuarios verán un mensaje de mantenimiento."
+          "✅ Modo mantenimiento ACTIVADO. Los usuarios verán un mensaje de mantenimiento.",
         );
         return;
       }
@@ -615,7 +662,7 @@ const listenMessage = () => {
         MODO_MANTENIMIENTO = false;
         sendMessage(
           from,
-          "⛔ Modo mantenimiento DESACTIVADO. El bot vuelve a funcionar normalmente."
+          "⛔ Modo mantenimiento DESACTIVADO. El bot vuelve a funcionar normalmente.",
         );
         return;
       }
@@ -628,14 +675,14 @@ const listenMessage = () => {
         if (!/^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]+$/.test(body.trim())) {
           sendMessage(
             from,
-            "⚠️ El nombre solo debe contener letras. Inténtalo de nuevo:"
+            "⚠️ El nombre solo debe contener letras. Inténtalo de nuevo:",
           );
           return;
         }
         datosRecepcion[from].nombre = body.trim();
         sendMessage(
           from,
-          "Indícanos tu cédula (solo números, máximo 8 dígitos):"
+          "Indícanos tu cédula (solo números, máximo 8 dígitos):",
         );
         return;
       }
@@ -644,14 +691,14 @@ const listenMessage = () => {
         if (!/^\d{1,8}$/.test(body.trim())) {
           sendMessage(
             from,
-            "⚠️ La cédula solo debe contener números y máximo 8 dígitos. Inténtalo de nuevo:"
+            "⚠️ La cédula solo debe contener números y máximo 8 dígitos. Inténtalo de nuevo:",
           );
           return;
         }
         datosRecepcion[from].cedula = body.trim();
         sendMessage(
           from,
-          "Indícanos el teléfono de quien recibe el pedido (solo números):"
+          "Indícanos el teléfono de quien recibe el pedido (solo números):",
         );
         return;
       }
@@ -660,7 +707,7 @@ const listenMessage = () => {
         if (!/^\d{11}$/.test(body.trim())) {
           sendMessage(
             from,
-            "⚠️ El teléfono solo debe contener números y 11 dígitos. Inténtalo de nuevo:"
+            "⚠️ El teléfono solo debe contener números y 11 dígitos. Inténtalo de nuevo:",
           );
           return;
         }
@@ -683,7 +730,7 @@ const listenMessage = () => {
           sendMessage(from, resumenConDatos);
           sendMessage(
             from,
-            "¿Cómo deseas pagar?\n\n 📲Pago Movil\n💳 Punto\n\nResponde con: _*PAGO MOVIL*_ o _*PUNTO*_"
+            "¿Cómo deseas pagar?\n\n 📲Pago Movil\n💳 Punto\n\nResponde con: _*PAGO MOVIL*_ o _*PUNTO*_",
           );
         }
         delete datosRecepcion[from];
@@ -699,7 +746,7 @@ const listenMessage = () => {
       if (!allowedTypes.includes(mime)) {
         sendMessage(
           from,
-          "⚠️ Debes enviarnos un capture de tu comprobante de pago. Solo se aceptan imágenes."
+          "⚠️ Debes enviarnos un capture de tu comprobante de pago. Solo se aceptan imágenes.",
         );
         return;
       }
@@ -708,10 +755,10 @@ const listenMessage = () => {
         const tipoPago = ultimoPedido[from].esperandoPagoMovil
           ? "Pago Movil"
           : ultimoPedido[from].esperandoEfectivoDivisas
-          ? "Efectivo Divisas"
-          : ultimoPedido[from].esperandoEfectivoBs
-          ? "Efectivo Bs."
-          : null;
+            ? "Efectivo Divisas"
+            : ultimoPedido[from].esperandoEfectivoBs
+              ? "Efectivo Bs."
+              : null;
 
         if (tipoPago) {
           msg.downloadMedia().then((media) => {
@@ -732,14 +779,14 @@ const listenMessage = () => {
                 console.error("Error al guardar imagen:", err);
                 sendMessage(
                   from,
-                  "⚠️ No pudimos guardar tu comprobante. Intenta de nuevo."
+                  "⚠️ No pudimos guardar tu comprobante. Intenta de nuevo.",
                 );
                 return;
               }
 
               sendMessage(
                 from,
-                "¡Comprobante recibido! Pronto validaremos tu pago."
+                "¡Comprobante recibido! Pronto validaremos tu pago.",
               );
 
               const { resumen, total } = ultimoPedido[from];
@@ -762,7 +809,7 @@ const listenMessage = () => {
                         console.log("Error en consulta:", err);
                         sendMessage(
                           from,
-                          "⚠️ Ha ocurrido un error, intenta de nuevo"
+                          "⚠️ Ha ocurrido un error, intenta de nuevo",
                         );
                       } else {
                         const ordenNum = results[0][0]?.orden || null;
@@ -775,14 +822,14 @@ const listenMessage = () => {
                         setTimeout(() => {
                           sendMessage(
                             from,
-                            `En caso de tener algún inconveniente con tu pedido, comunícate con soporte al: ${telefonoATC} (solo WhatsApp).`
+                            `En caso de tener algún inconveniente con tu pedido, comunícate con soporte al: ${telefonoATC} (solo WhatsApp).`,
                           );
                         }, 1000);
                         broadcastNewOrder();
                       }
-                    }
+                    },
                   );
-                }
+                },
               );
 
               delete ultimoPedido[from].esperandoPagoMovil;
@@ -824,7 +871,7 @@ const listenMessage = () => {
         if (!validos) {
           sendMessage(
             from,
-            `Debes indicar 1 código de cada sabor, separados por coma.\nEjemplo: SA1, SP3\nSabores normales:\n${menuSabores}\nSabores premium:\n${menuSaboresPremium}`
+            `Debes indicar 1 código de cada sabor, separados por coma.\nEjemplo: SA1, SP3\nSabores normales:\n${menuSabores}\nSabores premium:\n${menuSaboresPremium}`,
           );
           return;
         }
@@ -838,7 +885,7 @@ const listenMessage = () => {
         if (!validos) {
           sendMessage(
             from,
-            `Debes indicar el código del refresco. Opciones:\n${menuSaboresRefresco}`
+            `Debes indicar el código del refresco. Opciones:\n${menuSaboresRefresco}`,
           );
           return;
         }
@@ -852,7 +899,7 @@ const listenMessage = () => {
         if (!validos) {
           sendMessage(
             from,
-            `Debes indicar el código del té lipton. Opciones:\n${menuSaboresLipton}`
+            `Debes indicar el código del té lipton. Opciones:\n${menuSaboresLipton}`,
           );
           return;
         }
@@ -867,7 +914,7 @@ const listenMessage = () => {
         if (!validos) {
           sendMessage(
             from,
-            `‼️ Debes indicar exactamente solo ${cantidad} sabores disponibles, separados por coma. Opciones:\n${menuSabores}ℹ️ Responde solo con el código exacto de los sabores que deseas separados por coma.\n\nEjemplo: *SA1, SA7* - para ordenar una arepa con pollo y tocineta. ✅\n\nℹ️ Si envias, más de 2 sabores: SA1, SA7, SA5 - No entendere. ❌`
+            `‼️ Debes indicar exactamente solo ${cantidad} sabores disponibles, separados por coma. Opciones:\n${menuSabores}ℹ️ Responde solo con el código exacto de los sabores que deseas separados por coma.\n\nEjemplo: *SA1, SA7* - para ordenar una arepa con pollo y tocineta. ✅\n\nℹ️ Si envias, más de 2 sabores: SA1, SA7, SA5 - No entendere. ❌`,
           );
           return;
         }
@@ -885,8 +932,8 @@ const listenMessage = () => {
         `✅ Hemos agregado: ${productoAgregado.cantidad} x ${
           productoAgregado.item
         } con sabores: ${sabores.join(
-          ", "
-        )}\n\nPuedes seguir agregando productos de nuestros menú.\n\nℹ️Escribe *A* para menú de arepas.\n\nℹ️Escribe *B* para menú de hamburguesas.\n\nℹ️ Si tu pedido esta completo, escribe *V* para verlo.`
+          ", ",
+        )}\n\nPuedes seguir agregando productos de nuestros menú.\n\nℹ️Escribe *A* para menú de arepas.\n\nℹ️Escribe *B* para menú de hamburguesas.\n\nℹ️ Si tu pedido esta completo, escribe *V* para verlo.`,
       );
       return;
     }
@@ -911,7 +958,7 @@ const listenMessage = () => {
       sendMedia(
         from,
         "logo1.jpg",
-        "👋 ¡Hola! Bienvenido al sistema de pedidos automático. 🛒\n\nEstás interactuando con un bot 🤖, por favor sigue las instrucciones con atención para tomar tu pedido correctamente.\n\nℹ️ Para iniciar escribe *D.*"
+        "👋 ¡Hola! Bienvenido al sistema de pedidos automático. 🛒\n\nEstás interactuando con un bot 🤖, por favor sigue las instrucciones con atención para tomar tu pedido correctamente.\n\nℹ️ Para iniciar escribe *D.*",
       );
       return;
     }
@@ -924,7 +971,7 @@ const listenMessage = () => {
           sendMessage(
             from,
             zonaDelivery +
-              "\n\nℹ️ Escribe solo el código de la zona de entrega de tu pedido.\n\nEjempo: *ZD2* - si tu zona de entrega es Lecheria"
+              "\n\nℹ️ Escribe solo el código de la zona de entrega de tu pedido.\n\nEjempo: *ZD2* - si tu zona de entrega es Lecheria",
           );
         });
         break;
@@ -933,7 +980,7 @@ const listenMessage = () => {
       case "m":
         sendMessage(
           from,
-          "🫓 Escribe *A* para enviarte el menú del *Arepazo* (arepas).\n\n🍔 Escribe *B* para enviarte el menú *SmashRico* (hamburguesas).\n\n🥩 Escribe *PR* para enviarte el menú *Parrillazo*."
+          "🫓 Escribe *A* para enviarte el menú del *Arepazo* (arepas).\n\n🍔 Escribe *B* para enviarte el menú *SmashRico* (hamburguesas).\n\n🥩 Escribe *PR* para enviarte el menú *Parrillazo*.",
         );
         break;
       case "arepa":
@@ -945,7 +992,7 @@ const listenMessage = () => {
           setTimeout(() => {
             sendMessage(
               from,
-              "ℹ️ Responde con la cantidad y el código del producto que quieres agregar al pedido.\n\nℹ️ Debes agregar un solo producto por mensaje.\n\nEjemplo: *2 MA1* ✅\nPara ordenar 2 arepas mixta, 2 sabores.\n\nSi envias: 2 MA1, 3 MA2, BE3 - No entendere. ❌"
+              "ℹ️ Responde con la cantidad y el código del producto que quieres agregar al pedido.\n\nℹ️ Debes agregar un solo producto por mensaje.\n\nEjemplo: *2 MA1* ✅\nPara ordenar 2 arepas mixta, 2 sabores.\n\nSi envias: 2 MA1, 3 MA2, BE3 - No entendere. ❌",
             );
           }, 2000);
         });
@@ -958,7 +1005,7 @@ const listenMessage = () => {
         setTimeout(() => {
           sendMessage(
             from,
-            "ℹ️ Responde con la cantidad y el código del producto que quieres agregar al pedido.\n\nEjemplo: *2 HB1* - para ordenar 2 smash burger. ✅\n\nℹ️ Debes agregra un solo producto por mensaje.\n\nSi envias: *2 HB1, PA2* - No entedere. ❌\n\nℹ️ Luego de elegir la hamburguesa o nuggets, elegiras como lo quieres: solo, con papas o en combo y te mostrare los precios."
+            "ℹ️ Responde con la cantidad y el código del producto que quieres agregar al pedido.\n\nEjemplo: *2 HB1* - para ordenar 2 smash burger. ✅\n\nℹ️ Debes agregra un solo producto por mensaje.\n\nSi envias: *2 HB1, PA2* - No entedere. ❌\n\nℹ️ Luego de elegir la hamburguesa o nuggets, elegiras como lo quieres: solo, con papas o en combo y te mostrare los precios.",
           );
         }, 5000);
         break;
@@ -970,7 +1017,7 @@ const listenMessage = () => {
           setTimeout(() => {
             sendMessage(
               from,
-              "ℹ️ Responde con la cantidad y el código del producto que quieres agregar al pedido.\n\nℹ️ Debes agregar un solo producto por mensaje.\n\nEjemplo: *2 PR1* ✅\nPara ordenar 2 parrillas grandes.\n\nSi envias: 2 PR1, 3 PR2, BE3 - No entendere. ❌"
+              "ℹ️ Responde con la cantidad y el código del producto que quieres agregar al pedido.\n\nℹ️ Debes agregar un solo producto por mensaje.\n\nEjemplo: *2 PR1* ✅\nPara ordenar 2 parrillas grandes.\n\nSi envias: 2 PR1, 3 PR2, BE3 - No entendere. ❌",
             );
           }, 2000);
         });
@@ -998,7 +1045,7 @@ const listenMessage = () => {
           setTimeout(() => {
             sendMessage(
               from,
-              "ℹ️ Escribe *O* para ordenar y confimar tu pedido\n\nℹ️ Escribe *BORRAR* para eliminarlo"
+              "ℹ️ Escribe *O* para ordenar y confimar tu pedido\n\nℹ️ Escribe *BORRAR* para eliminarlo",
             );
           }, 1000);
 
@@ -1007,7 +1054,7 @@ const listenMessage = () => {
         } else {
           sendMessage(
             from,
-            "⚠️ Aún no haz agregado productos.\n\nℹ️ Escribe *M* para enviarte el menú y comenzar a tomar tu pedido."
+            "⚠️ Aún no haz agregado productos.\n\nℹ️ Escribe *M* para enviarte el menú y comenzar a tomar tu pedido.",
           );
         }
         break;
@@ -1027,7 +1074,7 @@ const listenMessage = () => {
       case "o":
         if (pedidos[from] && pedidos[from].length > 0) {
           const yaTieneDelivery = pedidos[from].some(
-            (p) => p.item && p.item.startsWith("Delivery")
+            (p) => p.item && p.item.startsWith("Delivery"),
           );
           if (yaTieneDelivery) {
             let total = 0;
@@ -1056,7 +1103,7 @@ const listenMessage = () => {
             const fecha = new Date().toISOString().replace(/[:.]/g, "-");
             const archivo = path.join(
               ordenesDir,
-              `pedido_${from}_${fecha}.txt`
+              `pedido_${from}_${fecha}.txt`,
             );
             const contenidoArchivo = `Cliente: ${nombreCliente}\nNúmero: ${from}\nFecha: ${fecha}\n\n${resumen}`;
             fs.writeFileSync(archivo, contenidoArchivo);
@@ -1073,13 +1120,13 @@ const listenMessage = () => {
               from,
               " ⚠️No conocemos tu zona de entrega. Escribela para agregarla\n\n" +
                 zonaDelivery +
-                "\n\nℹ️ Escribe solo el código de la zona de entrega de tu pedido.\n\nEjemplo: *ZD2* - si tu zona de entrea es Lecheria"
+                "\n\nℹ️ Escribe solo el código de la zona de entrega de tu pedido.\n\nEjemplo: *ZD2* - si tu zona de entrea es Lecheria",
             );
           }
         } else {
           sendMessage(
             from,
-            "⚠️ Aún no has agregado productos.\n\nℹ️Escribe *M* para enviarte el menú y comenzar a tomar tu pedido."
+            "⚠️ Aún no has agregado productos.\n\nℹ️Escribe *M* para enviarte el menú y comenzar a tomar tu pedido.",
           );
         }
         break;
@@ -1097,13 +1144,13 @@ const listenMessage = () => {
               "RIF: J-506873745\n" +
               "Banco: Banco de Venezuela (0102) ó\n" +
               "Banco Digital de los Trabajadores (0175)\n\n" +
-              "*Envianos tu capture del pago movil*"
+              "*Envianos tu capture del pago movil*",
           );
           ultimoPedido[from].esperandoPagoMovil = true;
         } else {
           sendMessage(
             from,
-            "⚠️ No existe ningun pedido, escribe *D* para comenzar."
+            "⚠️ No existe ningun pedido, escribe *D* para comenzar.",
           );
         }
         break;
@@ -1169,7 +1216,7 @@ const listenMessage = () => {
                     console.log("Error en consulta:", err);
                     sendMessage(
                       from,
-                      "⚠️Ha ocurrido un error, intenta de nuevo"
+                      "⚠️Ha ocurrido un error, intenta de nuevo",
                     );
                   } else {
                     ordenNum = results[0][0]?.orden || null;
@@ -1178,20 +1225,20 @@ const listenMessage = () => {
                       from,
                       "Perfecto, puedes pagar en punto de venta al momento de la entrega. En breve nuestro equipo se comunicara contigo para coordinar los detalles de entrega.\n\n" +
                         "Tu orden es: " +
-                        ordenNum
+                        ordenNum,
                     );
                     setTimeout(() => {
                       sendMessage(
                         from,
                         "Comunicate con soporte al: " +
                           telefonoATC +
-                          " en caso de incidencia con tu pedido. (solo Whatsapp)"
+                          " en caso de incidencia con tu pedido. (solo Whatsapp)",
                       );
                     }, 1000);
                   }
-                }
+                },
               );
-            }
+            },
           );
           delete ultimoPedido[from];
           limpiarEstadoCliente(from);
@@ -1205,7 +1252,7 @@ const listenMessage = () => {
           actualizarTasa();
           sendMessage(
             from,
-            "✅ Tasa de cambio actualizada correctamnete Bs." + tasaActual
+            "✅ Tasa de cambio actualizada correctamnete Bs." + tasaActual,
           );
         } else {
           sendMessage(from, "⚠️ No podemos entender tu orden");
@@ -1250,7 +1297,7 @@ const listenMessage = () => {
               };
               sendMessage(
                 from,
-                `¿Quieres elegir sabores diferentes para cada arepa?\n\nℹ️ Responde *SÍ*, si quieres personalizar cada arepa, o *NO* si todas serán iguales.`
+                `¿Quieres elegir sabores diferentes para cada arepa?\n\nℹ️ Responde *SÍ*, si quieres personalizar cada arepa, o *NO* si todas serán iguales.`,
               );
               return;
             }
@@ -1272,12 +1319,12 @@ const listenMessage = () => {
               if (matchCodigoArepa.nombre.includes("premium")) {
                 sendMessage(
                   from,
-                  `Indica los sabores para tu arepa\n\nℹ️ Máximo 2, separados por coma.\n\nEjemplo: SA10, SP1 ✅\n\nSabores disponibles:\n${menuSabores}\nSabores premium:\n${menuSaboresPremium}`
+                  `Indica los sabores para tu arepa\n\nℹ️ Máximo 2, separados por coma.\n\nEjemplo: SA10, SP1 ✅\n\nSabores disponibles:\n${menuSabores}\nSabores premium:\n${menuSaboresPremium}`,
                 );
               } else {
                 sendMessage(
                   from,
-                  `Sabores disponibles:\n${menuSabores}\n\nℹ️ Responde solo con el código exacto de los sabores que deseas separados por coma.\n\nEjemplo: SA1, SA7 ✅\nPara ordenar una arepa con pollo y tocineta\n\nSi envias más de 2 sabores: SA1, SA7, SA5 - No entendere ❌`
+                  `Sabores disponibles:\n${menuSabores}\n\nℹ️ Responde solo con el código exacto de los sabores que deseas separados por coma.\n\nEjemplo: SA1, SA7 ✅\nPara ordenar una arepa con pollo y tocineta\n\nSi envias más de 2 sabores: SA1, SA7, SA5 - No entendere ❌`,
                 );
               }
             });
@@ -1295,7 +1342,7 @@ const listenMessage = () => {
             iniciarTimeoutPedido(from);
             sendMessage(
               from,
-              `✅ Hemos agregado: ${producto.cantidad} x ${producto.item} (REF.${producto.precio} c/u) = REF.${producto.subtotal}\n\nPuedes seguir agregando productos de nuestros menú.\n\nℹ️Escribe *A* para menú de arepas.\n\nℹ️Escribe *B* para menú de hamburguesas.\n\nℹ️ Si tu pedido esta completo, escribe *V* para verlo.`
+              `✅ Hemos agregado: ${producto.cantidad} x ${producto.item} (REF.${producto.precio} c/u) = REF.${producto.subtotal}\n\nPuedes seguir agregando productos de nuestros menú.\n\nℹ️Escribe *A* para menú de arepas.\n\nℹ️Escribe *B* para menú de hamburguesas.\n\nℹ️ Si tu pedido esta completo, escribe *V* para verlo.`,
             );
             return;
           }
@@ -1320,7 +1367,7 @@ const listenMessage = () => {
                   seleccionSaboresIndividual[from].tipo === "premium"
                     ? menuSabores + "\nSabores premium:\n" + menuSaboresPremium
                     : menuSabores
-                }`
+                }`,
               );
             });
             return;
@@ -1343,12 +1390,12 @@ const listenMessage = () => {
               if (seleccionSaboresIndividual[from].tipo === "premium") {
                 sendMessage(
                   from,
-                  `Indica los sabores para todas tus arepas\n\nℹ️ Máximo 2, separados por coma.\n\nEjemplo: SA10, SP1 ✅\n\nSabores disponibles:\n${menuSabores}\nSabores premium:\n${menuSaboresPremium}`
+                  `Indica los sabores para todas tus arepas\n\nℹ️ Máximo 2, separados por coma.\n\nEjemplo: SA10, SP1 ✅\n\nSabores disponibles:\n${menuSabores}\nSabores premium:\n${menuSaboresPremium}`,
                 );
               } else {
                 sendMessage(
                   from,
-                  `Indica los sabores para todas tus arepas\n\nℹ️ Máximo 2, separados por coma.\n\nEjemplo: SA1, SA7 ✅\n\nSabores disponibles:\n${menuSabores}`
+                  `Indica los sabores para todas tus arepas\n\nℹ️ Máximo 2, separados por coma.\n\nEjemplo: SA1, SA7 ✅\n\nSabores disponibles:\n${menuSabores}`,
                 );
               }
               delete seleccionSaboresIndividual[from];
@@ -1358,7 +1405,7 @@ const listenMessage = () => {
           } else {
             sendMessage(
               from,
-              "Por favor responde solo con *SÍ* o *NO* para continuar."
+              "Por favor responde solo con *SÍ* o *NO* para continuar.",
             );
             return;
           }
@@ -1402,7 +1449,7 @@ const listenMessage = () => {
                 from,
                 `⚠️ Debes indicar 1 código de sabor normal y 1 de sabor premium para la arepa #${
                   idx + 1
-                }, separados por coma.\n\nEjemplo: SA1, SP3\n\nSabores normales:\n${menuSabores}\nSabores premium:\n${menuSaboresPremium}`
+                }, separados por coma.\n\nEjemplo: SA1, SP3\n\nSabores normales:\n${menuSabores}\nSabores premium:\n${menuSaboresPremium}`,
               );
               return;
             }
@@ -1419,7 +1466,7 @@ const listenMessage = () => {
                 from,
                 `⚠️ Debes indicar hasta 2 códigos de sabor válidos para la arepa #${
                   idx + 1
-                }, separados por coma.\n\nEjemplo: SA1, SA7\n\nSabores disponibles:\n${menuSabores}`
+                }, separados por coma.\n\nEjemplo: SA1, SA7\n\nSabores disponibles:\n${menuSabores}`,
               );
               return;
             }
@@ -1438,7 +1485,7 @@ const listenMessage = () => {
               from,
               `Ahora indica los sabores para la arepa #${
                 seleccionSaboresIndividual[from].actual + 1
-              }\n\nℹ️ Máximo 2, separados por coma.\n\nEjemplo: SA1, SP3 ✅`
+              }\n\nℹ️ Máximo 2, separados por coma.\n\nEjemplo: SA1, SP3 ✅`,
             );
             return;
           } else {
@@ -1466,7 +1513,7 @@ const listenMessage = () => {
                 seleccionSaboresIndividual[from].sabores
                   .map((sab, idx) => `- Arepa #${idx + 1}: ${sab.join(", ")}`)
                   .join("\n") +
-                `\n\nPuedes seguir agregando productos de nuestros menú.\n\nℹ️ Escribe *A* para el menú de arepas.\n\nℹ️ Escribe *B* para el menú de hamburguesas.\n\nℹ️ Si tu pedido esté completo, escribe *V* para verlo.`
+                `\n\nPuedes seguir agregando productos de nuestros menú.\n\nℹ️ Escribe *A* para el menú de arepas.\n\nℹ️ Escribe *B* para el menú de hamburguesas.\n\nℹ️ Si tu pedido esté completo, escribe *V* para verlo.`,
             );
             delete seleccionSaboresIndividual[from];
             return;
@@ -1486,7 +1533,7 @@ const listenMessage = () => {
           };
           sendMessage(
             from,
-            `¿Cómo deseas tu ${matchCodigoBurger.nombre}?\nResponde con:\n*S* para sola (REF.${matchCodigoBurger.precios.S})\n*P* para con papas (REF.${matchCodigoBurger.precios.P})\n*C* para en combo (REF.${matchCodigoBurger.precios.C})`
+            `¿Cómo deseas tu ${matchCodigoBurger.nombre}?\nResponde con:\n*S* para sola (REF.${matchCodigoBurger.precios.S})\n*P* para con papas (REF.${matchCodigoBurger.precios.P})\n*C* para en combo (REF.${matchCodigoBurger.precios.C})`,
           );
           return;
         }
@@ -1510,12 +1557,12 @@ const listenMessage = () => {
             iniciarTimeoutPedido(from);
             sendMessage(
               from,
-              `✅ Hemos agregado: ${producto.cantidad} x ${producto.item} (REF.${producto.precio} c/u) = REF.${producto.subtotal}\n\nPuedes seguir agregando productos de nuestros menú.\n\nℹ️Escribe *A* para menú de arepas.\n\nℹ️Escribe *B* para menú de hamburguesas.\n\nℹ️ Si tu pedido esta completo, escribe *V* para verlo.`
+              `✅ Hemos agregado: ${producto.cantidad} x ${producto.item} (REF.${producto.precio} c/u) = REF.${producto.subtotal}\n\nPuedes seguir agregando productos de nuestros menú.\n\nℹ️Escribe *A* para menú de arepas.\n\nℹ️Escribe *B* para menú de hamburguesas.\n\nℹ️ Si tu pedido esta completo, escribe *V* para verlo.`,
             );
           } else {
             sendMessage(
               from,
-              "⚠️ Opción inválida.\n\nℹ️ Responde con las opciones indicadas.\n\nEjemplo: *S* - para hambuerguesa sola ó *C* - para hamburguesa en combo."
+              "⚠️ Opción inválida.\n\nℹ️ Responde con las opciones indicadas.\n\nEjemplo: *S* - para hambuerguesa sola ó *C* - para hamburguesa en combo.",
             );
           }
           return;
@@ -1534,7 +1581,7 @@ const listenMessage = () => {
           };
           sendMessage(
             from,
-            `¿Cómo deseas tus ${matchCodigoNugget.nombre}?\nResponde con:\n*S* para solo (REF.${matchCodigoNugget.precios.S})\n*P* para con papas (REF.${matchCodigoNugget.precios.P})\n*C* para en combo (REF.${matchCodigoNugget.precios.C})`
+            `¿Cómo deseas tus ${matchCodigoNugget.nombre}?\nResponde con:\n*S* para solo (REF.${matchCodigoNugget.precios.S})\n*P* para con papas (REF.${matchCodigoNugget.precios.P})\n*C* para en combo (REF.${matchCodigoNugget.precios.C})`,
           );
           return;
         }
@@ -1558,12 +1605,12 @@ const listenMessage = () => {
             iniciarTimeoutPedido(from);
             sendMessage(
               from,
-              `✅ Hemos agregado: ${producto.cantidad} x ${producto.item} (REF.${producto.precio} c/u) = REF.${producto.subtotal}\n\nPuedes seguir agregando productos de nuestros menú.\n\nℹ️Escribe *A* para menú de arepas.\n\nℹ️Escribe *B* para menú de hamburguesas.\n\nℹ️ Si tu pedido esta completo, escribe *V* para verlo.`
+              `✅ Hemos agregado: ${producto.cantidad} x ${producto.item} (REF.${producto.precio} c/u) = REF.${producto.subtotal}\n\nPuedes seguir agregando productos de nuestros menú.\n\nℹ️Escribe *A* para menú de arepas.\n\nℹ️Escribe *B* para menú de hamburguesas.\n\nℹ️ Si tu pedido esta completo, escribe *V* para verlo.`,
             );
           } else {
             sendMessage(
               from,
-              "⚠️ Opción inválida.\n\nℹ️ Responde con las opciones indicadas.\n\nEjemplo: *S* - para nuggets solos ó *C* - para nuggets en combo."
+              "⚠️ Opción inválida.\n\nℹ️ Responde con las opciones indicadas.\n\nEjemplo: *S* - para nuggets solos ó *C* - para nuggets en combo.",
             );
           }
           return;
@@ -1583,7 +1630,7 @@ const listenMessage = () => {
           iniciarTimeoutPedido(from);
           sendMessage(
             from,
-            `✅ Hemos agregado: ${producto.cantidad} x ${producto.item} (REF.${producto.precio} c/u) = REF.${producto.subtotal}\n\nPuedes seguir agregando productos de nuestros menú.\n\nℹ️Escribe *A* para menú de arepas.\n\nℹ️Escribe *B* para menú de hamburguesas.\n\nℹ️ Si tu pedido esta completo, escribe *V* para verlo.`
+            `✅ Hemos agregado: ${producto.cantidad} x ${producto.item} (REF.${producto.precio} c/u) = REF.${producto.subtotal}\n\nPuedes seguir agregando productos de nuestros menú.\n\nℹ️Escribe *A* para menú de arepas.\n\nℹ️Escribe *B* para menú de hamburguesas.\n\nℹ️ Si tu pedido esta completo, escribe *V* para verlo.`,
           );
           return;
         }
@@ -1612,7 +1659,7 @@ const listenMessage = () => {
           sendMessage(
             from,
             `✅ Hemos agregado: ${producto.cantidad} x ${producto.item} (REF.${producto.precio} c/u) = REF.${producto.subtotal}\n` +
-              `➕ ${envase.item} (${envase.cantidad} x REF.${envase.precio} c/u) = REF.${envase.subtotal}\n\nPuedes seguir agregando productos de nuestros menú.\n\nℹ️Escribe *A* para menú de arepas.\n\nℹ️Escribe *B* para menú de hamburguesas.\n\nℹ️Escribe *P* para menú de parrilla.\n\nℹ️ Si tu pedido esta completo, escribe *V* para verlo.`
+              `➕ ${envase.item} (${envase.cantidad} x REF.${envase.precio} c/u) = REF.${envase.subtotal}\n\nPuedes seguir agregando productos de nuestros menú.\n\nℹ️Escribe *A* para menú de arepas.\n\nℹ️Escribe *B* para menú de hamburguesas.\n\nℹ️Escribe *P* para menú de parrilla.\n\nℹ️ Si tu pedido esta completo, escribe *V* para verlo.`,
           );
           return;
         }
@@ -1641,12 +1688,12 @@ const listenMessage = () => {
               if (matchCodigoBebida.nombre.includes("Refresco")) {
                 sendMessage(
                   from,
-                  `Sabores:\n${menuSaboresRefresco}\n\nℹ️ Responde con el código exacto del sabor.\n\nEjemplo: *RF1* - para ordenar Pepsi`
+                  `Sabores:\n${menuSaboresRefresco}\n\nℹ️ Responde con el código exacto del sabor.\n\nEjemplo: *RF1* - para ordenar Pepsi`,
                 );
               } else if (matchCodigoBebida.nombre.includes("Lipton")) {
                 sendMessage(
                   from,
-                  `*Sabores:*\n${menuSaboresLipton}\n\nℹ️ Responde con el código exacto del sabor.\n\nEjemplo: *LT1* - para ordenar Té Verde`
+                  `*Sabores:*\n${menuSaboresLipton}\n\nℹ️ Responde con el código exacto del sabor.\n\nEjemplo: *LT1* - para ordenar Té Verde`,
                 );
               }
             });
@@ -1663,7 +1710,7 @@ const listenMessage = () => {
             iniciarTimeoutPedido(from);
             sendMessage(
               from,
-              `✅ Hemos agregado: ${producto.cantidad} x ${producto.item} (REF.${producto.precio} c/u) = REF.${producto.subtotal}\n\nPuedes seguir agregando productos de nuestros menú.\n\nℹ️Escribe *A* para menú de arepas.\n\nℹ️Escribe *B* para menú de hamburguesas.\n\nℹ️ Si tu pedido esta completo, escribe *V* para verlo.`
+              `✅ Hemos agregado: ${producto.cantidad} x ${producto.item} (REF.${producto.precio} c/u) = REF.${producto.subtotal}\n\nPuedes seguir agregando productos de nuestros menú.\n\nℹ️Escribe *A* para menú de arepas.\n\nℹ️Escribe *B* para menú de hamburguesas.\n\nℹ️ Si tu pedido esta completo, escribe *V* para verlo.`,
             );
             return;
           }
@@ -1674,12 +1721,12 @@ const listenMessage = () => {
         if (matchCodigoDelivery) {
           pedidos[from] = pedidos[from] || [];
           const yaTieneDelivery = pedidos[from].some(
-            (p) => p.item && p.item.startsWith("Delivery")
+            (p) => p.item && p.item.startsWith("Delivery"),
           );
           if (yaTieneDelivery) {
             sendMessage(
               from,
-              "ℹ️ Ya habias agregado una zona de delivery a tu pedido.\n\nEscribe *M* para continuar con tu orden."
+              "ℹ️ Ya habias agregado una zona de delivery a tu pedido.\n\nEscribe *M* para continuar con tu orden.",
             );
           } else {
             const producto = {
@@ -1691,7 +1738,7 @@ const listenMessage = () => {
             pedidos[from].push(producto);
             sendMessage(
               from,
-              `🛵 Gracias por compartir tu zona de entrega.\n\nℹ️ Escribe *M* para iniciar tu pedido.\n\nℹ️ Escribe *V* para ver tu pedido si ya agregaste productos.`
+              `🛵 Gracias por compartir tu zona de entrega.\n\nℹ️ Escribe *M* para iniciar tu pedido.\n\nℹ️ Escribe *V* para ver tu pedido si ya agregaste productos.`,
             );
           }
           return;
@@ -1702,14 +1749,14 @@ const listenMessage = () => {
         if (erroresUsuario[from] >= LIMITE_ERRORES) {
           sendMessage(
             from,
-            `¿Necesitas ayuda? Puedes comunicarte con soporte al: ${telefonoATC} (solo Whatsapp).`
+            `¿Necesitas ayuda? Puedes comunicarte con soporte al: ${telefonoATC} (solo Whatsapp).`,
           );
           erroresUsuario[from] = 0; // Reinicia el contador tras mostrar el mensaje de soporte
           return;
         }
         sendMessage(
           from,
-          "🤖 ¡Hola! Estás interactuando con un bot automatizado.\n\nNo pudimos entender tu mensaje.\n\n‼️ Por favor, asegúrate de escribir el comando indicado en el mensaje anterior correctamente si estas en el curso de un pedido.\n\nℹ️ Si no haz comenzado tu pedido, escribe *D* y sigue las instrucciones paso a paso."
+          "🤖 ¡Hola! Estás interactuando con un bot automatizado.\n\nNo pudimos entender tu mensaje.\n\n‼️ Por favor, asegúrate de escribir el comando indicado en el mensaje anterior correctamente si estas en el curso de un pedido.\n\nℹ️ Si no haz comenzado tu pedido, escribe *D* y sigue las instrucciones paso a paso.",
         );
     }
   });
@@ -1731,13 +1778,16 @@ const sendMedia = (to, file, caption = "") => {
 const iniciarTimeoutPedido = (from) => {
   clearTimeout(pedidoTimeouts[from]);
   delete pedidoTimeouts[from];
-  pedidoTimeouts[from] = setTimeout(() => {
-    pedidos[from] = [];
-    sendMessage(
-      from,
-      "⏰ Su pedido ha sido eliminado por inactividad. Escriba _*D*_ para volver a comenzar."
-    );
-  }, 20 * 60 * 1000);
+  pedidoTimeouts[from] = setTimeout(
+    () => {
+      pedidos[from] = [];
+      sendMessage(
+        from,
+        "⏰ Su pedido ha sido eliminado por inactividad. Escriba _*D*_ para volver a comenzar.",
+      );
+    },
+    20 * 60 * 1000,
+  );
 };
 
 function limpiarEstadoCliente(from) {
@@ -1752,7 +1802,7 @@ function limpiarEstadoCliente(from) {
   delete erroresUsuario[from];
   if (ultimoTimestamp[from]) {
     console.log(
-      `[limpiarEstadoCliente] Eliminando timestamp de usuario: ${from}`
+      `[limpiarEstadoCliente] Eliminando timestamp de usuario: ${from}`,
     );
     delete ultimoTimestamp[from];
   }
@@ -1784,12 +1834,15 @@ function limpiarEstadosInactivos() {
       limpiarEstadoCliente(from);
       sendMessage(
         from,
-        "⏰ Tu sesión ha expirado por inactividad. Escribe *D* para comenzar un nuevo pedido."
+        "⏰ Tu sesión ha expirado por inactividad. Escribe *D* para comenzar un nuevo pedido.",
       );
     }
   });
 }
 
-setInterval(() => {
-  limpiarEstadosInactivos();
-}, 10 * 60 * 1000); // cada 10 minutos los usuarios inactivos
+setInterval(
+  () => {
+    limpiarEstadosInactivos();
+  },
+  10 * 60 * 1000,
+); // cada 10 minutos los usuarios inactivos
