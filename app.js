@@ -177,7 +177,6 @@ function cargarSaboresDesdeBD(callback) {
 // Función para cargar menú de arepas y bebidas desde BD
 function cargarMenuArepazoDesdeBD(callback) {
   db.query("CALL get_menu_arepazo()", (err, results) => {
-    console.log("Cargando menú de arepas desde BD...", results);
     if (err) {
       console.error("Error al obtener menú de arepas:", err);
       return;
@@ -1624,6 +1623,25 @@ const listenMessage = () => {
             precio: matchCodigoPapa.precio,
             cantidad: cantidad,
             subtotal: cantidad * matchCodigoPapa.precio,
+          };
+          pedidos[from] = pedidos[from] || [];
+          pedidos[from].push(producto);
+          iniciarTimeoutPedido(from);
+          sendMessage(
+            from,
+            `✅ Hemos agregado: ${producto.cantidad} x ${producto.item} (REF.${producto.precio} c/u) = REF.${producto.subtotal}\n\nPuedes seguir agregando productos de nuestros menú.\n\nℹ️Escribe *A* para menú de arepas.\n\nℹ️Escribe *B* para menú de hamburguesas.\n\nℹ️ Si tu pedido esta completo, escribe *V* para verlo.`,
+          );
+          return;
+        }
+
+        // Otros
+        const matchCodigoOtros = otrosCod[nombreProducto.toUpperCase()];
+        if (matchCodigoOtros) {
+          const producto = {
+            item: matchCodigoOtros.nombre,
+            precio: matchCodigoOtros.precio,
+            cantidad: cantidad,
+            subtotal: cantidad * matchCodigoOtros.precio,
           };
           pedidos[from] = pedidos[from] || [];
           pedidos[from].push(producto);
