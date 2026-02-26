@@ -11,6 +11,8 @@ const ENVASE_PRECIO = parseFloat(process.env.ENVASE_PRECIO || "0.50");
 const qrWeb = require("./qr-server");
 const { broadcastNewOrder } = require("./ws-server");
 const cron = require("node-cron");
+const axios = require("axios");
+const util = require("util");
 
 // Conexión a BD MySQL
 const db = mysql.createPool({
@@ -18,13 +20,16 @@ const db = mysql.createPool({
   port: process.env.DB_PORT,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
-  database: process.env.DB_DATABASE,
+  database: process.env.DEV_DB || process.env.DB_DATABASE,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
   connectTimeout: 5000,
   idleTimeout: 60000,
 });
+
+// Convierte db.query a promesas para usar async/await
+const query = util.promisify(db.query).bind(db);
 
 // Validar conexión a la BD
 db.getConnection((err, connection) => {
@@ -97,6 +102,11 @@ cargarMenuArepazoDesdeBD();
 // Al iniciar el bot, carga el menú de parrillazo
 cargarMenuParrillazoDesdeBD();
 
+
+// PRUEBAS
+updateRateWorkflow();
+
+
 // Permitir activar/desactivar log desde WhatsApp (solo número autorizado)
 function toggleLogConversaciones(activar) {
   LOG_CONVERSACIONES = activar;
@@ -118,15 +128,70 @@ function actualizarTasa() {
   });
 }
 
-// Programar para que se ejecute todos los días a las 12:00 am
-cron.schedule("0 0 * * 2-6", () => {
-  actualizarTasa();
-  numeroAutorizado.forEach((num) => {
-    setTimeout(() => {
+// Configuración de re-intentos
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 5000; // 5 segundos entre intentos
+
+async function fetchRateWithRetry(attempt = 1) {
+    try {
+        const response = await axios.get('https://bcv-rate-service-637822621799.us-central1.run.app/rate/bcv');
+        const tasa = response.data?.present?.rates?.usd;
+        
+        if (!tasa) throw new Error("No se encontró la tasa en la respuesta del API");
+        return tasa;
+    } catch (error) {
+        if (attempt <= MAX_RETRIES) {
+            console.warn(`⚠️ Intento ${attempt} fallido. Reintentando en ${RETRY_DELAY/1000}s...`);
+            await new Promise(res => setTimeout(res, RETRY_DELAY));
+            return fetchRateWithRetry(attempt + 1);
+        }
+        throw new Error(`❌ Fallaron todos los intentos: ${error.message}`);
+    }
+}
+
+async function updateRateWorkflow() {
+  try {
+    console.log("Iniciando actualización de tasa...");
+
+    // 1. Obtener tasa con re-intentos
+    const tasaUSD = await fetchRateWithRetry();
+
+    // 2. Guardar en BD (Enviando los 2 parámetros requeridos)
+    await query("CALL update_tasa(?, ?)", [tasaUSD, "USD"]);
+    console.log("Tasa guardada en BD correctamente.");
+
+    // 3. Consultar la tasa recién guardada (o usar la que ya tenemos)
+    // Si get_tasa() hace un SELECT, mysql retorna un array de arrays
+    const results = await query("CALL get_tasa()");
+    const tasaActual = results[0][0]?.tasa || tasaUSD;
+
+    // 4. Notificar a los autorizados
+    /* for (const num of numeroAutorizado) {
+      await new Promise((resolve) => setTimeout(resolve, 2000)); // Pequeño delay para no saturar el servicio de mensajería
       sendMessage(num, `✅ Tasa de cambio actualizada: Bs. ${tasaActual}`);
-    }, 5000);
-  });
-});
+    } */
+  } catch (error) {
+    // Aquí capturarás tanto errores de red como los SIGNAL de tu SP
+    console.error("❌ Error en el flujo de tasa:", error.message);
+  }
+}
+
+// Cron: Lunes a Viernes (2-6) a las 00:00
+cron.schedule("0 0 * * 2-6", updateRateWorkflow);
+
+// Programar para que se ejecute todos los días a las 12:00 am
+/* cron.schedule("0 0 * * 2-6", async () => {
+  // Tomar tasa del servicio
+  updateRateFromService(
+    actualizarTasa(() => {
+      numeroAutorizado.forEach((num) => {
+        setTimeout(() => {
+          sendMessage(num, `✅ Tasa de cambio actualizada: Bs. ${tasaActual}`);
+        }, 5000);
+      });
+    }),
+  );
+}); */
 
 /* cron.schedule("0 4 * * 1-5", () => {
   MODO_MANTENIMIENTO = true;
@@ -379,7 +444,7 @@ async function resetSession() {
       },
 
       puppeteer: {
-        /* executablePath: "/usr/bin/google-chrome", */ // o la ruta que te dé `which google-chrome`
+        /* executablePath: "C:\\Users\\l_a_b\\.cache\\puppeteer\\chrome\\win64-145.0.7632.77\\chrome-win64\\chrome.exe", */ // o la ruta que te dé `which google-chrome`
         headless: true,
         args: [
           "--no-sandbox",
@@ -450,7 +515,7 @@ client = new Client({
   },
 
   puppeteer: {
-    /* executablePath: "/usr/bin/google-chrome", */ // o la ruta que te dé `which google-chrome`
+    /* executablePath: "C:\\Users\\l_a_b\\.cache\\puppeteer\\chrome\\win64-145.0.7632.77\\chrome-win64\\chrome.exe", */ // o la ruta que te dé `which google-chrome`
     headless: true,
     args: [
       "--no-sandbox",
