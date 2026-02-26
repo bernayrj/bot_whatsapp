@@ -102,11 +102,6 @@ cargarMenuArepazoDesdeBD();
 // Al iniciar el bot, carga el menú de parrillazo
 cargarMenuParrillazoDesdeBD();
 
-
-// PRUEBAS
-updateRateWorkflow();
-
-
 // Permitir activar/desactivar log desde WhatsApp (solo número autorizado)
 function toggleLogConversaciones(activar) {
   LOG_CONVERSACIONES = activar;
@@ -166,10 +161,10 @@ async function updateRateWorkflow() {
     const tasaActual = results[0][0]?.tasa || tasaUSD;
 
     // 4. Notificar a los autorizados
-    /* for (const num of numeroAutorizado) {
+    for (const num of numeroAutorizado) {
       await new Promise((resolve) => setTimeout(resolve, 2000)); // Pequeño delay para no saturar el servicio de mensajería
       sendMessage(num, `✅ Tasa de cambio actualizada: Bs. ${tasaActual}`);
-    } */
+    }
   } catch (error) {
     // Aquí capturarás tanto errores de red como los SIGNAL de tu SP
     console.error("❌ Error en el flujo de tasa:", error.message);
