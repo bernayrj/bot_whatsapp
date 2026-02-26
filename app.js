@@ -158,7 +158,7 @@ async function updateRateWorkflow() {
     // 3. Consultar la tasa recién guardada (o usar la que ya tenemos)
     // Si get_tasa() hace un SELECT, mysql retorna un array de arrays
     const results = await query("CALL get_tasa()");
-    const tasaActual = results[0][0]?.tasa || tasaUSD;
+    tasaActual = results[0][0]?.tasa || tasaUSD;
 
     // 4. Notificar a los autorizados
     for (const num of numeroAutorizado) {
