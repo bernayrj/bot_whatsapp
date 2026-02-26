@@ -138,7 +138,7 @@ async function fetchRateWithRetry(attempt = 1) {
         const tasa = response.data?.present?.rates?.usd;
         
         if (!tasa) throw new Error("No se encontró la tasa en la respuesta del API");
-        return tasa;
+        return Number(tasa).toFixed(2);
     } catch (error) {
         if (attempt <= MAX_RETRIES) {
             console.warn(`⚠️ Intento ${attempt} fallido. Reintentando en ${RETRY_DELAY/1000}s...`);
