@@ -128,20 +128,30 @@ const MAX_RETRIES = 3;
 const RETRY_DELAY = 5000; // 5 segundos entre intentos
 
 async function fetchRateWithRetry(attempt = 1) {
-    try {
-        const response = await axios.get('https://bcv-rate-service-637822621799.us-central1.run.app/rate/bcv');
-        const tasa = response.data?.present?.rates?.usd;
-        
-        if (!tasa) throw new Error("No se encontró la tasa en la respuesta del API");
-        return Number(tasa).toFixed(2);
-    } catch (error) {
-        if (attempt <= MAX_RETRIES) {
-            console.warn(`⚠️ Intento ${attempt} fallido. Reintentando en ${RETRY_DELAY/1000}s...`);
-            await new Promise(res => setTimeout(res, RETRY_DELAY));
-            return fetchRateWithRetry(attempt + 1);
-        }
-        throw new Error(`❌ Fallaron todos los intentos: ${error.message}`);
+  try {
+    const response = await axios.get('https://bcv-rate-service-637822621799.us-central1.run.app/rate/bcv');
+    const dayOfWeek = new Date().getDay(); // 0 (Domingo) a 6 (Sábado)
+
+    // Usar la tasa del lunes (next) durante el fin de semana (sábado y domingo).
+    let tasa;
+    const isWeekend = dayOfWeek === 6 || dayOfWeek === 0;
+    if (isWeekend) {
+      tasa = response.data?.next?.rates?.usd;
+    } else {
+      tasa = response.data?.present?.rates?.usd;
     }
+
+    if (!tasa) throw new Error("No se encontró la tasa en la respuesta del API");
+    return Number(tasa).toFixed(2);
+  } catch (error) {
+    // Permitir exactamente MAX_RETRIES intentos (intentos numerados desde 1).
+    if (attempt <= MAX_RETRIES) {
+      console.warn(`⚠️ Intento ${attempt} fallido. Reintentando en ${RETRY_DELAY/1000}s...`);
+      await new Promise(res => setTimeout(res, RETRY_DELAY));
+      return fetchRateWithRetry(attempt + 1);
+    }
+    throw new Error(`❌ Fallaron todos los intentos: ${error.message}`);
+  }
 }
 
 async function updateRateWorkflow() {
@@ -166,7 +176,7 @@ async function updateRateWorkflow() {
       sendMessage(num, `✅ Tasa de cambio actualizada: Bs. ${tasaActual}`);
     }
   } catch (error) {
-    // Aquí capturarás tanto errores de red como los SIGNAL de tu SP
+    // Capturar errores
     console.error("❌ Error en el flujo de tasa:", error.message);
   }
 }
