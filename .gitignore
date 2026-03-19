@@ -9,3 +9,5 @@ ordenes
 pagos/
 security/
 conversaciones/
+*.sql
+*.log

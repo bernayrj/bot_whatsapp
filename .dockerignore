@@ -1,0 +1,9 @@
+.wwebjs_auth
+.wwebjs_cache
+node_modules
+conversaciones
+pagos
+ordenes
+*.sql
+.env
+.git

@@ -1,0 +1,29 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: mysql_local
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: chat_bot
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql # Para cargar tus tablas al iniciar
+
+  bot:
+    build: .
+    container_name: bot_local
+    depends_on:
+      - db
+    env_file:
+      - .env
+    ports:
+      - "4000:4000" # Servidor QR
+      - "3001:3001" # WebSocket
+    volumes:
+      - .:/usr/app
+      - /usr/app/node_modules
+    deploy:
+      resources:
+        limits:
+          memory: 4G # Limitamos igual que la VM de GCP
